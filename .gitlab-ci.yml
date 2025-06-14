@@ -36,7 +36,7 @@ test:jdk21:
     TESTCONTAINERS_RYUK_DISABLED: true
   before_script:
     - mkdir -p ~/.docker/
-    - >-
+    - |
       cat << EOF > ~/.docker/config.json
       {
         "auths": {
