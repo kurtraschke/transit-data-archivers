@@ -25,7 +25,7 @@ test:jdk21:
         - .m2/repository
   services:
     - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind-rootless
-      alias: dind
+      alias: docker
       command: ["--experimental", "--feature", "containerd-snapshotter=true" ]
   variables:
     DOCKER_HOST: tcp://docker:2376
