@@ -18,3 +18,5 @@ fun getRowCount(client: Client, table: String): Int {
                 }
         }
 }
+
+val clickhouseImageName = (System.getenv("CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX")?.let { "$it/" } ?: "") + "clickhouse/clickhouse-server"

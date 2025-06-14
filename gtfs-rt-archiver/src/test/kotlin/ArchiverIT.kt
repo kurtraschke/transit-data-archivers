@@ -12,6 +12,7 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import picocli.CommandLine
 import picocli.CommandLine.ExitCode
+import systems.choochoo.transit_data_archivers.core.utils.clickhouseImageName
 import systems.choochoo.transit_data_archivers.core.utils.getRowCount
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
@@ -60,7 +61,7 @@ class ArchiverIT {
     companion object {
         @Container
         @JvmField
-        var chContainer: ClickHouseContainer = ClickHouseContainer("clickhouse/clickhouse-server")
+        var chContainer: ClickHouseContainer = ClickHouseContainer(clickhouseImageName)
             .withCopyToContainer(
                 Transferable.of(TEST_SETUP_SQL),
                 "/docker-entrypoint-initdb.d/test-setup.sql"
