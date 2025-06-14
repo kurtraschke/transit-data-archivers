@@ -35,7 +35,16 @@ test:jdk21:
     DOCKER_CERT_PATH: "/certs/client"
     TESTCONTAINERS_RYUK_DISABLED: true
   before_script:
-    - echo "$CI_DEPENDENCY_PROXY_PASSWORD" | docker login $CI_DEPENDENCY_PROXY_SERVER -u $CI_DEPENDENCY_PROXY_USER --password-stdin
+    - >-
+      cat << EOF > ~/.docker/config.json
+      {
+        "auths": {
+          "${CI_DEPENDENCY_PROXY_SERVER}": {
+            "auth": "$(echo -n ${CI_DEPENDENCY_PROXY_USER}:${CI_DEPENDENCY_PROXY_PASSWORD} | base64)"
+          }
+        }
+      }
+      EOF
     - sleep 5
   script:
     - mvn ${MAVEN_CLI_OPTS} verify
