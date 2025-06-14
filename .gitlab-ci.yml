@@ -1,0 +1,95 @@
+variables:
+  MAVEN_OPTS: >-
+    -Dhttps.protocols=TLSv1.2
+    -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dorg.slf4j.simpleLogger.showDateTime=true
+    -Djava.awt.headless=true
+    -Dmaven.install.skip=true
+
+  MAVEN_CLI_OPTS: >-
+    --batch-mode
+    --errors
+    --fail-at-end
+    --show-version
+    --no-transfer-progress
+    -DinstallAtEnd=true
+    -DdeployAtEnd=true
+
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/maven:3-amazoncorretto-21-al2023
+
+test:jdk21:
+  stage: test
+  cache:
+    - key: "maven-cache-$CI_JOB_NAME"
+      paths:
+        - .m2/repository
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind-rootless
+      alias: dind
+      command: ["--experimental", "--feature", "containerd-snapshotter=true" ]
+  variables:
+    DOCKER_HOST: tcp://docker:2376
+    DOCKER_DRIVER: overlayfs
+    DOCKER_TLS_VERIFY: 1
+    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_CERT_PATH: "/certs/client"
+    TESTCONTAINERS_RYUK_DISABLED: true
+  before_script:
+    - sleep 5
+  script:
+    - mvn ${MAVEN_CLI_OPTS} verify
+
+deploy:jdk21:
+  stage: deploy
+  cache:
+    - key: "maven-cache-$CI_JOB_NAME"
+      paths:
+        - .m2/repository
+    - key: "jib-cache-$CI_JOB_NAME"
+      paths:
+        - .cache/jib
+        - "*/target/jib-cache"
+  before_script:
+    - mkdir -p .cache/jib
+  script:
+    # if the user provide IMAGE_TAG then use it, else build the image tag using the default logic.
+    # Default logic
+    # Compose docker tag name
+    # Git Branch/Tag to Docker Image Tag Mapping
+    #   * Default Branch: main -> latest
+    #   * Branch: feature/my-feature -> branch-feature-my-feature
+    #   * Tag: v1.0.0/beta2 -> v1.0.0-beta2
+    - |
+      if [ -z ${IMAGE_TAG+x} ]; then
+        if [ "$CI_COMMIT_REF_NAME" = $CI_DEFAULT_BRANCH ]; then
+            VERSION="latest"
+        elif [ -n "$CI_COMMIT_TAG" ];then
+            NOSLASH=$(echo "$CI_COMMIT_TAG" | tr -s / - )
+            SANITIZED="${NOSLASH//[^a-zA-Z0-9.-]/}"
+            VERSION="$SANITIZED"
+        else \
+            NOSLASH=$(echo "$CI_COMMIT_REF_NAME" | tr -s / - )
+            SANITIZED="${NOSLASH//[^a-zA-Z0-9-]/}"
+            VERSION="branch-$SANITIZED"
+          fi
+        export IMAGE_TAG=$VERSION
+      fi
+    - echo $IMAGE_TAG
+    - echo $CI_REGISTRY_IMAGE
+    - >-
+      mvn ${MAVEN_CLI_OPTS} package jib:build
+      -Djib.from.image=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/amazoncorretto:21-al2023
+      -Djib.from.auth.username=${CI_DEPENDENCY_PROXY_USER}
+      -Djib.from.auth.password=${CI_DEPENDENCY_PROXY_PASSWORD}
+      -Djib.to.auth.username=${CI_REGISTRY_USER}
+      -Djib.to.auth.password=${CI_REGISTRY_PASSWORD}
+      -Djib.baseImageCache=${CI_PROJECT_DIR}/.cache/jib
+      -Djib.console=plain
+      -Djib.configDirectory=.config/google-cloud-tools-java/jib
+      -DskipTests
+  artifacts:
+    paths:
+      - "*/target/*-withAllDependencies.jar"
+  rules:
+    - exists:
+        - pom.xml

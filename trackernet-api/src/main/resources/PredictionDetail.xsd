@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://trackernet.lul.co.uk"
+           xmlns:t="http://trackernet.lul.co.uk"
+           xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb" jaxb:version="3.0">
+
+    <xs:annotation>
+        <xs:appinfo>
+            <jaxb:schemaBindings>
+                <jaxb:package name="uk.co.lul.trackernet.predictiondetail"/>
+            </jaxb:schemaBindings>
+        </xs:appinfo>
+    </xs:annotation>
+
+    <xs:element name="T">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:class name="Train"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:attribute type="xs:int" name="TrainId">
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="LCID">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="LCID"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+
+            <xs:attribute type="xs:string" name="SetNo" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="Set"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="TripNo" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="Trip"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="SecondsTo" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="TimeTo" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="Location" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="Destination" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="InputDest">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="InputDestination"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="DestCode" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="DestinationCode"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="Order" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="ArrivalTime" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="DepartTime" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="DepartInterval" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:boolean" name="Departed" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:int" name="Direction" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:boolean" name="IsStalled" use="required">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="TrackCode">
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="LN">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="Line"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+            <xs:attribute type="xs:string" name="LeadingCarNo">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="LeadingCarNumber"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="P">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:class name="Platform"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="t:T" maxOccurs="unbounded" minOccurs="0">
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:property name="trains"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="N" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="PlatformName"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute type="xs:int" name="Num" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="PlatformNumber"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute type="xs:string" name="TrackCode" use="required">
+            </xs:attribute>
+            <xs:attribute type="xs:boolean" name="NextTrain" use="required">
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="S">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:class name="Station"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="t:P" maxOccurs="unbounded" minOccurs="0">
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:property name="platforms"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+            <xs:attribute type="xs:string" name="Code" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="StationCode"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute type="xs:string" name="Mess" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="Message"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute type="xs:string" name="N" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="Name"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+            <xs:attribute type="xs:string" name="CurTime" use="required">
+                <xs:annotation>
+                    <xs:appinfo>
+                        <jaxb:property name="CurrentTime"/>
+                    </xs:appinfo>
+                </xs:annotation>
+            </xs:attribute>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="ROOT">
+        <xs:annotation>
+            <xs:appinfo>
+                <jaxb:class name="PredictionDetail"/>
+            </xs:appinfo>
+        </xs:annotation>
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="Disclaimer" type="xs:string"/>
+                <xs:element name="WhenCreated" type="xs:string"/>
+                <xs:element name="Line" type="xs:string"/>
+                <xs:element name="LineName" type="xs:string"/>
+                <xs:element ref="t:S">
+                    <xs:annotation>
+                        <xs:appinfo>
+                            <jaxb:property name="station"/>
+                        </xs:appinfo>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+</xs:schema>

@@ -1,0 +1,10 @@
+{
+  "request": {
+    "method": "GET",
+    "host": {"equalTo": "streetcarnameddesire.test"},
+    "url": "/tripUpdates.pb"
+  },
+  "response": {
+    "fault": "MALFORMED_RESPONSE_CHUNK"
+  }
+}

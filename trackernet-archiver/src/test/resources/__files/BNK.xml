@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ROOT xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://trackernet.lul.co.uk">
+    <Disclaimer>This system is an INFORMATION ONLY system, relying entirely on
+        information received from the relevant Operational Railway Control System(s). It is NOT
+        considered a safety related system in the Railway Engineering sense. However,
+        the information reported may trigger user intervention by staff regarding possible
+        incidents on the railway, and confirmation of the situation observed should be obtained prior
+        to any corrective action being taken.</Disclaimer>
+    <WhenCreated>27 May 2025 2:10:41</WhenCreated>
+    <Line>W</Line>
+    <LineName>Waterloo &amp; City Line</LineName>
+    <S Code="BNK" Mess="" N="Bank." CurTime="2:10:41">
+        <P N="Westbound - Platform 7" Num="7" TrackCode="TWAABNK" NextTrain="false">
+            <T TrainId="3" LCID="" SetNo="003" TripNo="0" SecondsTo="0" TimeTo="-" Location="At Platform" Destination="Waterloo" InputDest="1" DestCode="594" Order="0" ArrivalTime="" DepartTime="22:40:09" DepartInterval="0" Departed="0" Direction="0" IsStalled="0" TrackCode="TWAABNK" LN="W" LeadingCarNo="0" />
+        </P>
+        <P N="Eastbound - Platform 8" Num="8" TrackCode="TWBAWLO" NextTrain="false" />
+    </S>
+</ROOT>

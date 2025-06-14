@@ -1,0 +1,13 @@
+<ROOT>
+    <Time TimeStamp="2025/05/27 02:10:42"/>
+    <S Code="BNK" N="Bank.">
+        <P N="Westbound - Platform 7" Code="0" Next="0">
+            <T S="003" T="0" D="594" C="-" L="At Platform" DE="Waterloo" AT="" DT="22:40:09"/>
+        </P>
+        <P N="Eastbound - Platform 8" Code="1" Next="0"/>
+    </S>
+    <S Code="WLO" N="Waterloo.">
+        <P N="Eastbound Platform 25" Code="1" Next="0"/>
+        <P N="Westbound Platform 26" Code="0" Next="0"/>
+    </S>
+</ROOT>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ROOT xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://trackernet.lul.co.uk">
+    <Disclaimer>This system is an INFORMATION ONLY system, relying entirely on
+        information received from the relevant Operational Railway Control System(s). It is NOT
+        considered a safety related system in the Railway Engineering sense. However,
+        the information reported may trigger user intervention by staff regarding possible
+        incidents on the railway, and confirmation of the situation observed should be obtained prior
+        to any corrective action being taken.</Disclaimer>
+    <WhenCreated>27 May 2025 2:10:41</WhenCreated>
+    <Line>W</Line>
+    <LineName>Waterloo &amp; City Line</LineName>
+    <S Code="WLO" Mess="" N="Waterloo." CurTime="2:10:41">
+        <P N="Eastbound Platform 25" Num="25" TrackCode="TWBNWLO" NextTrain="false" />
+        <P N="Westbound Platform 26" Num="26" TrackCode="TWAQWLO" NextTrain="false" />
+    </S>
+</ROOT>
