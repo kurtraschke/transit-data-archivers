@@ -41,14 +41,14 @@ test:jdk21:
       {
         "auths": {
           "${CI_DEPENDENCY_PROXY_SERVER}": {
-            "auth": "$(echo -n ${CI_DEPENDENCY_PROXY_USER}:${CI_DEPENDENCY_PROXY_PASSWORD} | base64)"
+            "auth": "$(echo -n ${CI_DEPENDENCY_PROXY_USER}:${CI_DEPENDENCY_PROXY_PASSWORD} | base64 -w 0)"
           }
         }
       }
       EOF
     - sleep 5
   script:
-    - mvn ${MAVEN_CLI_OPTS} verify
+    - mvn ${MAVEN_CLI_OPTS} -Dshade.skip=true verify
 
 deploy:jdk21:
   stage: deploy
