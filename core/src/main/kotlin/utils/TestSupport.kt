@@ -2,7 +2,6 @@ package systems.choochoo.transit_data_archivers.core.utils
 
 import com.clickhouse.client.api.Client
 import java.util.concurrent.TimeUnit
-import kotlin.use
 
 fun getRowCount(client: Client, table: String): Int {
     val query = "SELECT COUNT(*) FROM {table_name:Identifier}"
