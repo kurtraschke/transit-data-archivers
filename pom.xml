@@ -602,26 +602,6 @@
             </dependency>
 
             <dependency>
-                <groupId>com.jerolba</groupId>
-                <artifactId>carpet-record</artifactId>
-                <version>0.4.0</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.xerial.snappy</groupId>
-                        <artifactId>snappy-java</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>io.airlift</groupId>
-                        <artifactId>aircompressor</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.github.luben</groupId>
-                        <artifactId>zstd-jni</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
-            <dependency>
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
                 <version>26.0.1</version>

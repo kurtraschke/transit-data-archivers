@@ -1,12 +1,14 @@
 package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
 import com.clickhouse.client.api.Client
-import com.clickhouse.data.ClickHouseFormat.Parquet
+import com.clickhouse.data.ClickHouseFormat.JSONEachRow
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.common.base.Stopwatch
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.google.common.collect.ImmutableListMultimap
 import com.google.common.net.HttpHeaders.*
 import com.google.protobuf.ExtensionRegistry
@@ -14,8 +16,6 @@ import com.google.protobuf.InvalidProtocolBufferException
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
-import com.jerolba.carpet.CarpetWriter
-import com.jerolba.carpet.ColumnNamingStrategy.SNAKE_CASE
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Counter
 import io.prometheus.metrics.core.metrics.Gauge
@@ -31,8 +31,6 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.apache.parquet.hadoop.metadata.CompressionCodecName.UNCOMPRESSED
-import org.apache.parquet.io.api.Binary
 import org.quartz.*
 import org.slf4j.MDC
 import systems.choochoo.transit_data_archivers.gtfsrt.Feed
@@ -40,10 +38,9 @@ import systems.choochoo.transit_data_archivers.gtfsrt.cacheMetrics
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FeedContents
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus.*
+import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import systems.choochoo.transit_data_archivers.gtfsrt.ignoreAllTLSErrors
-import systems.choochoo.transit_data_archivers.model.FeedContentsRow
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
@@ -97,13 +94,37 @@ private val responseSizeBytes = Histogram.builder()
     .unit(Unit.BYTES)
     .register()
 
-private val genericMapper = jsonMapper {
-    addModules(
-        kotlinModule(),
-        GuavaModule(),
-        JavaTimeModule()
-    )
-}
+private val registryCache = CacheBuilder.newBuilder()
+    .maximumSize(50)
+    .recordStats()
+    .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
+        val registry = ExtensionRegistry.newInstance()
+        key.forEach { it.registerExtension(registry) }
+        registry
+    })
+    .apply { cacheMetrics.addCache("registryCache", this) }
+
+private val objectMapperCache = CacheBuilder.newBuilder()
+    .maximumSize(50)
+    .recordStats()
+    .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
+        val registry = registryCache.get(key)
+
+        val config = ProtobufJacksonConfig.builder()
+            .extensionRegistry(registry)
+            .build()
+
+        jsonMapper {
+            addModules(
+                kotlinModule(),
+                GuavaModule(),
+                JavaTimeModule(),
+                ProtobufModule(config)
+            )
+        }
+    })
+    .apply { cacheMetrics.addCache("objectMapperCache", this) }
+
 
 private val log = KotlinLogging.logger {}
 
@@ -129,18 +150,6 @@ internal class FeedArchiveJob : Job {
 
     override fun execute(context: JobExecutionContext) {
         val sw = Stopwatch.createStarted()
-
-        val registry = ExtensionRegistry.newInstance()
-        feed.extensions.forEach { it.registerExtension(registry) }
-
-        val config = ProtobufJacksonConfig.builder()
-            .extensionRegistry(registry)
-            .build()
-
-        val om = genericMapper
-            .rebuild()
-            .addModules(ProtobufModule(config))
-            .build()
 
         try {
             MDC.put("producer", feed.producer)
@@ -195,7 +204,8 @@ internal class FeedArchiveJob : Job {
                 SUCCESS,
                 feed.producer,
                 feed.feed,
-                fetchTime
+                fetchTime,
+                enabledExtensions = feed.extensions
             )
 
             try {
@@ -238,7 +248,7 @@ internal class FeedArchiveJob : Job {
 
                         if (fc.status == SUCCESS) {
                             try {
-                                val fm = FeedMessage.parseFrom(responseBodyBytes, registry)
+                                val fm = FeedMessage.parseFrom(responseBodyBytes, registryCache.get(feed.extensions))
 
                                 fc.headerTimestamp = Instant.fromEpochSeconds(fm.header.timestamp)
                                 fc.responseContents = fm
@@ -269,45 +279,13 @@ internal class FeedArchiveJob : Job {
             }
 
             if (STATUSES_TO_PERSIST.contains(fc.status)) {
-                val os = ByteArrayOutputStream()
+                val s = objectMapperCache.get(feed.extensions)
+                    .writeValueAsBytes(fc)
 
-                os.use {
-                    CarpetWriter.Builder(it, FeedContentsRow::class.java)
-                        .withColumnNamingStrategy(SNAKE_CASE)
-                        .withCompressionCodec(UNCOMPRESSED)
-                        .withBloomFilterEnabled(false)
-                        .build()
-                        .use { writer ->
-                            writer.write(
-                                FeedContentsRow(
-                                    fc.producer,
-                                    fc.feed,
-                                    fc.fetchTime.toJavaInstant(),
-                                    fc.isError,
-                                    fc.errorMessage,
-                                    fc.responseTimeMillis,
-                                    fc.statusCode,
-                                    fc.statusMessage,
-                                    fc.protocol?.name,
-                                    fc.responseHeaders?.let {
-                                        om.writeValueAsString(fc.responseHeaders)
-                                    },
-                                    fc.responseBody?.let { Binary.fromReusedByteArray(it) },
-                                    fc.responseBodyLength,
-                                    fc.responseContents?.let { om.writeValueAsString(it) },
-                                    feed.extensions.map { it.name }.toSet()
-                                )
-                            )
-                        }
-                }
-
-                val data = os.toByteArray()
-
-                val ins = ByteArrayInputStream(data)
-
-                val r = ins.use {
-                    clickHouseClient.insert("feed_contents", it, Parquet)
-                }
+                val r = ByteArrayInputStream(s)
+                    .use {
+                        clickHouseClient.insert("feed_contents_archiver_input", it, JSONEachRow)
+                    }
 
                 val rows = r.get().writtenRows
 
@@ -350,4 +328,3 @@ internal class FeedArchiveJob : Job {
         }
     }
 }
-

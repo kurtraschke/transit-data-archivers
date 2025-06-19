@@ -292,11 +292,6 @@
             <artifactId>client-v2</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.jerolba</groupId>
-            <artifactId>carpet-record</artifactId>
-        </dependency>
-
         <!-- prometheus -->
 
         <dependency>

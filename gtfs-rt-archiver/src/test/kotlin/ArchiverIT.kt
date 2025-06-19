@@ -75,7 +75,7 @@ class ArchiverIT {
 }
 
 const val TEST_SETUP_SQL = """
-create table feed_contents
+CREATE TABLE feed_contents
 (
     producer LowCardinality(String),
     feed LowCardinality(String),
@@ -94,6 +94,36 @@ create table feed_contents
 )
 ENGINE = MergeTree
 ORDER BY (producer, feed, fetch_time);
+
+-- This rigamarole is due to https://github.com/ClickHouse/ClickHouse/issues/46837, and in turn due to the fact that
+-- at the moment there does not appear to be a good way to insert a byte array into a ClickHouse string
+-- from Java using the RowBinary format.
+
+CREATE TABLE feed_contents_archiver_input
+(
+    producer String,
+    feed String,
+    fetch_time DateTime('UTC'),
+    is_error Bool,
+    error_message Nullable(String),
+    response_time_millis Nullable(UInt32),
+    status_code Nullable(UInt16),
+    status_message Nullable(String),
+    protocol Nullable(String),
+    response_headers Nullable(JSON),
+    response_body_b64 Nullable(String),
+    response_body_length Nullable(UInt32),
+    response_contents Nullable(JSON),
+    enabled_extensions Array(String)
+)
+ENGINE = Null;
+
+CREATE MATERIALIZED VIEW mv_feed_contents_archiver_input TO feed_contents AS
+SELECT producer, feed, fetch_time, is_error, error_message, response_time_millis,
+status_code, status_message, protocol, response_headers,
+base64Decode(response_body_b64) response_body, response_body_length,
+response_contents, enabled_extensions
+FROM feed_contents_archiver_input;
 """
 
 const val TEST_CONFIGURATION_YAML = """
