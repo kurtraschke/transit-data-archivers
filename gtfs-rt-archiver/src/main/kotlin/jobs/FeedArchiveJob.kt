@@ -36,6 +36,7 @@ import org.apache.parquet.io.api.Binary
 import org.quartz.*
 import org.slf4j.MDC
 import systems.choochoo.transit_data_archivers.gtfsrt.Feed
+import systems.choochoo.transit_data_archivers.gtfsrt.cacheMetrics
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FeedContents
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus.*
@@ -56,40 +57,40 @@ const val LAST_HEADER_TIMESTAMP = "lastHeaderTimestamp"
 
 private val STATUSES_TO_PERSIST: EnumSet<FetchStatus> = EnumSet.of(SUCCESS, ERROR)
 
-private val fetchCount: Counter = Counter.builder()
+private val fetchCount = Counter.builder()
     .name("fetch_event_total")
     .help("number of fetch events")
     .labelNames("producer", "feed", "fetch_status")
     .register()
 
-private val uncaughtErrorCount: Counter = Counter.builder()
+private val uncaughtErrorCount = Counter.builder()
     .name("uncaught_exception_total")
     .help("number of uncaught exceptions")
     .labelNames("producer", "feed")
     .register()
 
-private val lastFetchTime: Gauge = Gauge.builder()
+private val lastFetchTime = Gauge.builder()
     .name("last_fetch_time")
     .help("last fetch time as epoch timestamp")
     .labelNames("producer", "feed", "fetch_status")
     .unit(Unit.SECONDS)
     .register()
 
-private val totalFetchDuration: Histogram = Histogram.builder()
+private val totalFetchDuration = Histogram.builder()
     .name("overall_fetch_duration")
     .help("overall fetch duration in seconds")
     .labelNames("producer", "feed", "fetch_status")
     .unit(Unit.SECONDS)
     .register()
 
-private val serverResponseDuration: Histogram = Histogram.builder()
+private val serverResponseDuration = Histogram.builder()
     .name("server_response_duration")
     .help("time for remote server to respond in seconds")
     .labelNames("producer", "feed", "fetch_status")
     .unit(Unit.SECONDS)
     .register()
 
-private val responseSizeBytes: Histogram = Histogram.builder()
+private val responseSizeBytes = Histogram.builder()
     .name("response_size_bytes")
     .help("uncompressed size of response")
     .labelNames("producer", "feed", "fetch_status")

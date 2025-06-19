@@ -309,6 +309,10 @@
         </dependency>
         <dependency>
             <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-instrumentation-guava</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
             <artifactId>prometheus-metrics-exporter-httpserver</artifactId>
         </dependency>
 

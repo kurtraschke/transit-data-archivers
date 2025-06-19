@@ -9,13 +9,17 @@ import com.sksamuel.hoplite.addFileSource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.prometheus.metrics.core.metrics.Info
 import io.prometheus.metrics.exporter.httpserver.HTTPServer
+import io.prometheus.metrics.instrumentation.guava.CacheMetricsCollector
 import io.prometheus.metrics.instrumentation.jvm.JvmMetrics
+import io.prometheus.metrics.model.registry.PrometheusRegistry
 import picocli.CommandLine
 import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
+
+val cacheMetrics = CacheMetricsCollector()
 
 private val log = KotlinLogging.logger {}
 
@@ -70,6 +74,8 @@ class ArchiverCli : Callable<Int> {
         val errorListener = af.schedulerErrorListener()
 
         JvmMetrics.builder().register()
+
+        PrometheusRegistry.defaultRegistry.register(cacheMetrics)
 
         Info.builder()
             .name("gtfs_rt_archiver_info")
