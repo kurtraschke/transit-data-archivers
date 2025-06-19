@@ -21,49 +21,51 @@ private val logger = KotlinLogging.logger {}
 
 @Module
 internal class TrackernetApiClientModule() {
-    @Provides
-    @Singleton
-    fun provideTrackernetApiClient(
-        configuration: Configuration,
-        okHttpClient: OkHttpClient
-    ): TrackernetService {
-        @Suppress("UnstableApiUsage")
-        val rateLimiter =
-            RateLimiter.create((configuration.maxRequestsPerMinute * configuration.derateFactor.v) / 1.minutes.inWholeSeconds)
+    companion object {
+        @Provides
+        @Singleton
+        fun provideTrackernetApiClient(
+            configuration: Configuration,
+            okHttpClient: OkHttpClient
+        ): TrackernetService {
+            @Suppress("UnstableApiUsage")
+            val rateLimiter =
+                RateLimiter.create((configuration.maxRequestsPerMinute * configuration.derateFactor.v) / 1.minutes.inWholeSeconds)
 
-        val jc = JAXBContext.newInstance(PredictionSummary::class.java, PredictionDetail::class.java)
+            val jc = JAXBContext.newInstance(PredictionSummary::class.java, PredictionDetail::class.java)
 
-        val r = Retrofit.Builder()
-            .baseUrl(configuration.baseUrl)
-            .client(
-                okHttpClient.newBuilder()
-                    .addInterceptor { chain ->
-                        val delayedBy = rateLimiter.acquire(1)
-                        if (delayedBy > 0.0) {
-                            logger.trace { "Request to ${chain.request().url} delayed by $delayedBy seconds for rate-limiting." }
+            val r = Retrofit.Builder()
+                .baseUrl(configuration.baseUrl)
+                .client(
+                    okHttpClient.newBuilder()
+                        .addInterceptor { chain ->
+                            val delayedBy = rateLimiter.acquire(1)
+                            if (delayedBy > 0.0) {
+                                logger.trace { "Request to ${chain.request().url} delayed by $delayedBy seconds for rate-limiting." }
+                            }
+                            chain.proceed(chain.request())
                         }
-                        chain.proceed(chain.request())
-                    }
-                    .addInterceptor { chain ->
-                        chain.proceed(
-                            chain.request()
-                                .newBuilder()
-                                .url(
-                                    chain
-                                        .request()
-                                        .url
-                                        .newBuilder()
-                                        .addQueryParameter("app_key", configuration.appKey.value)
-                                        .build()
-                                )
-                                .build()
-                        )
-                    }
-                    .build()
-            )
-            .addConverterFactory(JaxbConverterFactory.create(jc))
-            .build()
+                        .addInterceptor { chain ->
+                            chain.proceed(
+                                chain.request()
+                                    .newBuilder()
+                                    .url(
+                                        chain
+                                            .request()
+                                            .url
+                                            .newBuilder()
+                                            .addQueryParameter("app_key", configuration.appKey.value)
+                                            .build()
+                                    )
+                                    .build()
+                            )
+                        }
+                        .build()
+                )
+                .addConverterFactory(JaxbConverterFactory.create(jc))
+                .build()
 
-        return r.create(TrackernetService::class.java)
+            return r.create(TrackernetService::class.java)
+        }
     }
 }
