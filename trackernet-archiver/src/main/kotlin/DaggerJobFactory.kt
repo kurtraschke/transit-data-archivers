@@ -1,4 +1,4 @@
-package systems.choochoo.transit_data_archivers.trackernet.utils
+package systems.choochoo.transit_data_archivers.trackernet
 
 import dagger.MembersInjector
 import jakarta.inject.Inject

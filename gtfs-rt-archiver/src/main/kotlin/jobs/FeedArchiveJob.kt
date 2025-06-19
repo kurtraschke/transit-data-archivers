@@ -33,13 +33,13 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.quartz.*
 import org.slf4j.MDC
+import systems.choochoo.transit_data_archivers.core.utils.ignoreAllTLSErrors
 import systems.choochoo.transit_data_archivers.gtfsrt.Feed
 import systems.choochoo.transit_data_archivers.gtfsrt.cacheMetrics
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FeedContents
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus.*
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
-import systems.choochoo.transit_data_archivers.gtfsrt.ignoreAllTLSErrors
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
