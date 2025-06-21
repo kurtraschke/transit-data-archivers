@@ -63,7 +63,7 @@ internal class Archiver @Inject constructor(
 ) {
     init {
         val jobs = configuration.feeds.map { feed ->
-            val fetchInterval = (feed.fetchInterval.orNull() ?: configuration.fetchInterval).v
+            val fetchInterval = (feed.fetchInterval.getOrNull() ?: configuration.fetchInterval).v
             val storeResponseBody = feed.storeResponseBody ?: configuration.storeResponseBody
             val storeResponseBodyOnError = feed.storeResponseBodyOnError ?: configuration.storeResponseBodyOnError
 
