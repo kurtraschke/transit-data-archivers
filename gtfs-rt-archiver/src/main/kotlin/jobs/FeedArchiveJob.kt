@@ -44,6 +44,8 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
+import kotlin.math.pow
+import kotlin.math.roundToLong
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.toKotlinDuration
@@ -95,8 +97,15 @@ private val responseSizeBytes = Histogram.builder()
     .unit(Unit.BYTES)
     .register()
 
+// We want to set some limit on the size of these caches, to prevent unbounded expansion in the event of a mishap.
+// But rather than setting an arbitrary limit, we want the number to be grounded in some basis.
+// The number of possible combinations of extensions is the cardinality of the powerset of the set of extensions,
+// or 2^n, where n is the number of extensions.
+
+private val CACHE_SIZE = 2.0.pow(GtfsRealtimeExtension.entries.size.toDouble()).roundToLong()
+
 private val registryCache = CacheBuilder.newBuilder()
-    .maximumSize(50)
+    .maximumSize(CACHE_SIZE)
     .recordStats()
     .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
         val registry = ExtensionRegistry.newInstance()
@@ -106,7 +115,7 @@ private val registryCache = CacheBuilder.newBuilder()
     .apply { cacheMetrics.addCache("registryCache", this) }
 
 private val objectMapperCache = CacheBuilder.newBuilder()
-    .maximumSize(50)
+    .maximumSize(CACHE_SIZE)
     .recordStats()
     .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
         val registry = registryCache.get(key)
