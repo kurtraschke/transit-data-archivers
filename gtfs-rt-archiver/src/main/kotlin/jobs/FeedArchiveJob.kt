@@ -44,6 +44,7 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.toKotlinDuration
 import java.lang.Boolean as jBoolean
@@ -310,7 +311,7 @@ internal class FeedArchiveJob : Job {
 
             fc.responseTimeMillis?.let {
                 serverResponseDuration.labelValues(fc.producer, fc.feed, fc.status.toString())
-                    .observe(it / 1000.0)
+                    .observe(it.milliseconds.toDouble(DurationUnit.SECONDS))
             }
 
             fc.responseBodyLength?.let {
