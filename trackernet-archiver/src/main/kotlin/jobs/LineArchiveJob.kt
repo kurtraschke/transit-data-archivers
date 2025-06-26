@@ -4,7 +4,6 @@ package systems.choochoo.transit_data_archivers.trackernet.jobs
 
 import com.clickhouse.client.api.Client
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
-import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.jakarta.xmlbind.JakartaXmlBindAnnotationModule
@@ -52,7 +51,7 @@ internal class LineArchiveJob : Job {
     lateinit var lineCode: String
     lateinit var excludedStations: List<String>
 
-    val w: ObjectWriter = om.writer()
+    private val w = om.writer()
 
     override fun execute(context: JobExecutionContext) {
         val fetchTime = context.fireTime.toInstant().toKotlinInstant()
