@@ -58,7 +58,7 @@ internal interface ArchiverFactory {
 
 internal class Archiver @Inject constructor(
     val configuration: Configuration,
-    @Named("oneShot") val oneShot: Boolean,
+    @param:Named("oneShot") val oneShot: Boolean,
     val scheduler: Scheduler,
 ) {
     init {

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.trackernet.jobs
 
 import com.clickhouse.client.api.Client
@@ -11,8 +13,6 @@ import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.common.base.Stopwatch
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
-import kotlinx.datetime.toJavaInstant
-import kotlinx.datetime.toKotlinInstant
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
@@ -25,8 +25,9 @@ import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
-import java.time.temporal.ChronoUnit.SECONDS
 import java.util.concurrent.CompletableFuture
+import kotlin.time.ExperimentalTime
+import kotlin.time.toKotlinInstant
 
 
 private val logger = KotlinLogging.logger {}
@@ -54,7 +55,7 @@ internal class LineArchiveJob : Job {
     val w: ObjectWriter = om.writer()
 
     override fun execute(context: JobExecutionContext) {
-        val fetchTime = context.fireTime.toInstant().truncatedTo(SECONDS).toKotlinInstant()
+        val fetchTime = context.fireTime.toInstant().toKotlinInstant()
 
         logger.trace { "Beginning fetch for $lineCode" }
         val st = Stopwatch.createStarted()
@@ -74,7 +75,7 @@ internal class LineArchiveJob : Job {
         }
 
         val psfr = PredictionSummaryFetchResult(
-            fetchTime.toJavaInstant(),
+            fetchTime,
             lineCode,
             predictionSummary
         )
@@ -116,7 +117,7 @@ internal class LineArchiveJob : Job {
             }
             .map { (stationCode, predictionDetail) ->
                 PredictionDetailFetchResult(
-                    fetchTime.toJavaInstant(),
+                    fetchTime,
                     lineCode,
                     stationCode,
                     predictionDetail

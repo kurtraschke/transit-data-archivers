@@ -273,11 +273,6 @@
 
         <dependency>
             <groupId>com.sksamuel.hoplite</groupId>
-            <artifactId>hoplite-datetime</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.sksamuel.hoplite</groupId>
             <artifactId>hoplite-arrow</artifactId>
         </dependency>
 

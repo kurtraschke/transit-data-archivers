@@ -243,11 +243,6 @@
             <artifactId>hoplite-yaml</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.sksamuel.hoplite</groupId>
-            <artifactId>hoplite-datetime</artifactId>
-        </dependency>
-
         <!-- clickhouse -->
 
         <dependency>

@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalHoplite::class)
+@file:OptIn(ExperimentalHoplite::class, ExperimentalTime::class)
 
 package systems.choochoo.transit_data_archivers.gtfsrt
 
@@ -17,6 +17,8 @@ import picocli.CommandLine.*
 import java.nio.file.Path
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
+import kotlin.time.ExperimentalTime
+import kotlin.time.toKotlinInstant
 
 
 val cacheMetrics = CacheMetricsCollector()
@@ -88,7 +90,7 @@ class ArchiverCli : Callable<Int> {
                 appVersion.version,
                 appVersion.branch,
                 appVersion.commitId,
-                appVersion.buildTimestamp.epochSeconds.toString()
+                appVersion.buildTimestamp.toKotlinInstant().epochSeconds.toString()
             )
 
         val server = HTTPServer.builder()

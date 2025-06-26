@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.gtfsrt.entities
 
 import com.fasterxml.jackson.annotation.JsonGetter
@@ -7,9 +9,10 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
 import com.fasterxml.jackson.databind.annotation.JsonNaming
 import com.google.common.collect.ListMultimap
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
-import kotlinx.datetime.Instant
 import okhttp3.Protocol
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 internal enum class FetchStatus {
     ERROR,

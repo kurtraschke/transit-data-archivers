@@ -1,6 +1,6 @@
 package systems.choochoo.transit_data_archivers.core.configuration
 
-import kotlinx.datetime.Instant
+import java.time.Instant
 
 data class ApplicationVersion(
     val groupId: String,

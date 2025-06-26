@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.trackernet
 
 import dagger.BindsInstance
@@ -6,8 +8,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
-import kotlinx.datetime.Clock
-import kotlinx.datetime.toJavaInstant
 import org.quartz.JobBuilder
 import org.quartz.JobDataMap
 import org.quartz.Scheduler
@@ -27,7 +27,10 @@ import systems.choochoo.transit_data_archivers.trackernet.modules.DaggerJobFacto
 import systems.choochoo.transit_data_archivers.trackernet.modules.TrackernetApiClientModule
 import java.util.*
 import kotlin.random.Random
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
 
 private val logger = KotlinLogging.logger {}
 
@@ -64,7 +67,7 @@ internal interface ArchiverFactory {
 
 internal class Archiver @Inject constructor(
     configuration: Configuration,
-    @Named("oneShot") val oneShot: Boolean,
+    @param:Named("oneShot") val oneShot: Boolean,
     val scheduler: Scheduler
 ) {
     init {

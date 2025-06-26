@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
 import com.clickhouse.client.api.Client
@@ -22,9 +24,6 @@ import io.prometheus.metrics.core.metrics.Gauge
 import io.prometheus.metrics.core.metrics.Histogram
 import io.prometheus.metrics.model.snapshots.Unit
 import jakarta.inject.Inject
-import kotlinx.datetime.Instant
-import kotlinx.datetime.toJavaInstant
-import kotlinx.datetime.toKotlinInstant
 import okhttp3.Authenticator
 import okhttp3.Credentials
 import okhttp3.Headers.Companion.toHeaders
@@ -48,7 +47,11 @@ import kotlin.math.pow
 import kotlin.math.roundToLong
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinDuration
+import kotlin.time.toKotlinInstant
 import java.lang.Boolean as jBoolean
 
 const val LAST_ETAG = "lastETag"
