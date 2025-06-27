@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.gtfsrt
 
 import dagger.BindsInstance
@@ -20,12 +22,18 @@ import systems.choochoo.transit_data_archivers.core.modules.ApplicationVersionMo
 import systems.choochoo.transit_data_archivers.core.modules.ClickHouseClientModule
 import systems.choochoo.transit_data_archivers.core.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.core.modules.QuartzSchedulerModule
+import systems.choochoo.transit_data_archivers.core.utils.randomDuration
 import systems.choochoo.transit_data_archivers.gtfsrt.jobs.FeedArchiveJob
 import systems.choochoo.transit_data_archivers.gtfsrt.listeners.JobFailureListener
 import systems.choochoo.transit_data_archivers.gtfsrt.modules.DaggerJobFactoryModule
 import systems.choochoo.transit_data_archivers.gtfsrt.modules.ConfigurationModule
+import java.util.Date
+import kotlin.time.Clock
+import kotlin.time.DurationUnit.*
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
 
-private var log = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 @Component(
     modules = [
@@ -81,16 +89,18 @@ internal class Archiver @Inject constructor(
 
             val trigger = newTrigger()
                 .withIdentity(feed.feed, feed.producer)
-                .startNow()
                 .let {
-                    if (!oneShot) {
-                        it.withSchedule(
-                            simpleSchedule()
-                                .withIntervalInSeconds(fetchInterval.inWholeSeconds.toInt())
-                                .repeatForever()
-                        )
+                    if (oneShot) {
+                        it.startNow()
                     } else {
+                        val startTime = Clock.System.now() + randomDuration(fetchInterval)
                         it
+                            .startAt(Date.from(startTime.toJavaInstant()))
+                            .withSchedule(
+                                simpleSchedule()
+                                    .withIntervalInSeconds(fetchInterval.toInt(SECONDS))
+                                    .repeatForever()
+                            )
                     }
                 }
                 .build()

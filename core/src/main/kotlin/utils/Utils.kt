@@ -7,6 +7,8 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import kotlin.random.Random
+import kotlin.time.Duration
 
 fun constructUserAgentString(
     applicationVersion: ApplicationVersion,
@@ -37,4 +39,8 @@ fun OkHttpClient.Builder.ignoreAllTLSErrors(): OkHttpClient.Builder {
     sslSocketFactory(insecureSocketFactory, naiveTrustManager)
     hostnameVerifier { _, _ -> true }
     return this
+}
+
+fun randomDuration(d: Duration): Duration {
+    return d * Random.nextDouble(0.0, 0.5)
 }

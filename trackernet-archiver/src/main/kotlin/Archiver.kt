@@ -20,15 +20,14 @@ import systems.choochoo.transit_data_archivers.core.modules.ApplicationVersionMo
 import systems.choochoo.transit_data_archivers.core.modules.ClickHouseClientModule
 import systems.choochoo.transit_data_archivers.core.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.core.modules.QuartzSchedulerModule
+import systems.choochoo.transit_data_archivers.core.utils.randomDuration
 import systems.choochoo.transit_data_archivers.trackernet.jobs.LineArchiveJob
 import systems.choochoo.transit_data_archivers.trackernet.listeners.FixedDelayJobListener
 import systems.choochoo.transit_data_archivers.trackernet.modules.ConfigurationModule
 import systems.choochoo.transit_data_archivers.trackernet.modules.DaggerJobFactoryModule
 import systems.choochoo.transit_data_archivers.trackernet.modules.TrackernetApiClientModule
 import java.util.*
-import kotlin.random.Random
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
@@ -88,7 +87,7 @@ internal class Archiver @Inject constructor(
                     if (oneShot) {
                         it.startNow()
                     } else {
-                        val startTime = Clock.System.now() + Random.Default.nextInt(1, 15).seconds
+                        val startTime = Clock.System.now() + randomDuration(lc.fetchInterval.v)
                         it.startAt(Date.from(startTime.toJavaInstant()))
                     }
                 }
