@@ -23,7 +23,6 @@ class ClickHouseClientModule() {
                 .setOptions(database.options)
                 .serverSetting("async_insert", "1")
                 .serverSetting("wait_for_async_insert", "1")
-                .serverSetting("materialized_views_ignore_errors", "1")
                 .serverSetting("input_format_try_infer_datetimes", "0")
                 .setUsername(database.username)
                 .setPassword(database.password?.value ?: "")

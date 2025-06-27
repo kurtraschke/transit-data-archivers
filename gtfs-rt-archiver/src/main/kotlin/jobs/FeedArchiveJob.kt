@@ -297,7 +297,26 @@ internal class FeedArchiveJob : Job {
 
                 val r = ByteArrayInputStream(s)
                     .use {
-                        clickHouseClient.insert("feed_contents_archiver_input", it, JSONEachRow)
+                        clickHouseClient.insert(
+                            "feed_contents",
+                            listOf(
+                                "producer",
+                                "feed",
+                                "fetch_time",
+                                "error_message",
+                                "status_code",
+                                "status_message",
+                                "protocol",
+                                "response_headers",
+                                "response_time_millis",
+                                "response_body_length",
+                                "enabled_extensions",
+                                "response_body_b64",
+                                "response_contents"
+                            ),
+                            it,
+                            JSONEachRow
+                        )
                     }
 
                 val rows = r.get().writtenRows
