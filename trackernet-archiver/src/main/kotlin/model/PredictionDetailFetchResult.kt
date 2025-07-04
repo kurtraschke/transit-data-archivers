@@ -19,5 +19,5 @@ internal data class PredictionDetailFetchResult(
     val predictionDetail: PredictionDetail,
 ) {
     @JsonGetter("fetch_time")
-    fun getFetchTimeEpoch(): Long = fetchTime.epochSeconds
+    fun getFetchTimeEpoch() = fetchTime.epochSeconds
 }

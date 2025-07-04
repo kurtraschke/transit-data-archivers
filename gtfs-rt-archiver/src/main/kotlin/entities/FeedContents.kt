@@ -66,5 +66,5 @@ internal data class FeedContents(
     var headerTimestamp: Instant? = null
 
     @JsonGetter("fetch_time")
-    fun getFetchTimeEpoch(): Long = fetchTime.epochSeconds
+    fun getFetchTimeEpoch() = fetchTime.epochSeconds
 }

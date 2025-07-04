@@ -18,5 +18,5 @@ internal data class PredictionSummaryFetchResult(
     var predictionSummary: PredictionSummary,
 ) {
     @JsonGetter("fetch_time")
-    fun getFetchTimeEpoch(): Long = fetchTime.epochSeconds
+    fun getFetchTimeEpoch() = fetchTime.epochSeconds
 }
