@@ -11,8 +11,7 @@ import okhttp3.java.net.cookiejar.JavaNetCookieJar
 import systems.choochoo.transit_data_archivers.core.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.core.utils.constructUserAgentString
-import java.net.CookieManager
-import java.net.CookiePolicy
+import java.net.CookieHandler
 
 private val log = KotlinLogging.logger {}
 
@@ -21,10 +20,8 @@ class OkHttpClientModule() {
     companion object {
         @Provides
         @Singleton
-        fun provideClient(configuration: ConfigurationCore, appVersion: ApplicationVersion): OkHttpClient {
-            val cookieManager = CookieManager()
-            cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
-            val jar = JavaNetCookieJar(cookieManager)
+        fun provideClient(configuration: ConfigurationCore, appVersion: ApplicationVersion, cookieHandler: CookieHandler): OkHttpClient {
+            val jar = JavaNetCookieJar(cookieHandler)
 
             val userAgentString = constructUserAgentString(appVersion, configuration.operatorContact, OkHttp.VERSION)
 
