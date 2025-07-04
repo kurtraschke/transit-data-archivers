@@ -189,10 +189,7 @@ internal class FeedArchiveJob : Job {
                 }
             }
 
-            val request = Request.Builder()
-                .url(feedUrlBuilder.build())
-                .headers(headersBuilder.build())
-                .build()
+            val request = Request(feedUrlBuilder.build(), headersBuilder.build())
 
             val customizedClient = httpClient
                 .newBuilder()
@@ -252,7 +249,7 @@ internal class FeedArchiveJob : Job {
 
                         fc.responseTimeMillis =
                             (response.receivedResponseAtMillis - response.sentRequestAtMillis).toInt()
-                        val responseBodyBytes = response.body!!.bytes()
+                        val responseBodyBytes = response.body.bytes()
 
                         fc.responseBodyLength = responseBodyBytes.size
 

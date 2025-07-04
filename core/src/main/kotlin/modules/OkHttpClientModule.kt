@@ -5,15 +5,14 @@ import dagger.Module
 import dagger.Provides
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
-import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
+import okhttp3.java.net.cookiejar.JavaNetCookieJar
 import systems.choochoo.transit_data_archivers.core.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.core.utils.constructUserAgentString
 import java.net.CookieManager
 import java.net.CookiePolicy
-import kotlin.time.toJavaDuration
 
 private val log = KotlinLogging.logger {}
 
@@ -33,7 +32,7 @@ class OkHttpClientModule() {
 
             return OkHttpClient.Builder()
                 .cookieJar(jar)
-                .callTimeout(configuration.callTimeout.toJavaDuration())
+                .callTimeout(configuration.callTimeout)
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request()
