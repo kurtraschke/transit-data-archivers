@@ -3,6 +3,7 @@
 package systems.choochoo.transit_data_archivers.trackernet.jobs
 
 import com.clickhouse.client.api.Client
+import com.clickhouse.client.api.insert.InsertSettings
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -39,6 +40,8 @@ private val om = jsonMapper {
         GuavaModule()
     )
 }
+
+private val settings = InsertSettings().serverSetting("materialized_views_ignore_errors", "1")
 
 @DisallowConcurrentExecution
 internal class LineArchiveJob : Job {
@@ -140,7 +143,8 @@ internal class LineArchiveJob : Job {
                     client.insert(
                         "prediction_summary",
                         it,
-                        JSONEachRow
+                        JSONEachRow,
+                        settings
                     ).get()
                 }
 
@@ -164,7 +168,8 @@ internal class LineArchiveJob : Job {
                 client.insert(
                     "prediction_details",
                     it,
-                    JSONEachRow
+                    JSONEachRow,
+                    settings
                 )
             }
 
