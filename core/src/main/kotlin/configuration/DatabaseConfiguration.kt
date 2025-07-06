@@ -4,8 +4,8 @@ import com.sksamuel.hoplite.Masked
 import java.net.URI
 
 data class DatabaseConfiguration(
-    val url: URI,
-    val username: String? = "default",
-    val password: Masked?,
+    val url: URI = URI.create("http://localhost:8123"),
+    val username: String = "default",
+    val password: Masked = Masked(""),
     val options: Map<String, String> = emptyMap()
 )

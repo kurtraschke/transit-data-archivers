@@ -3,6 +3,7 @@ package systems.choochoo.transit_data_archivers.trackernet
 import com.sksamuel.hoplite.Masked
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.core.configuration.DatabaseConfiguration
+import systems.choochoo.transit_data_archivers.core.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.core.configuration.FetchInterval
 import java.net.URI
 import java.net.URL
@@ -19,7 +20,8 @@ value class DerateFactor(val v: Double) {
 }
 
 internal data class Configuration (
-    override val database: DatabaseConfiguration,
+    override val database: DatabaseConfiguration = DatabaseConfiguration(),
+    override val fallback: FallbackConfiguration = FallbackConfiguration(),
     val appKey: Masked,
     val baseUrl: URL = URI.create("https://api.tfl.gov.uk/TrackerNet/").toURL(),
     override val operatorContact: String?,

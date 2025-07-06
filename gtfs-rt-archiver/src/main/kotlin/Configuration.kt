@@ -4,6 +4,7 @@ import arrow.core.Option
 import com.sksamuel.hoplite.Masked
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.core.configuration.DatabaseConfiguration
+import systems.choochoo.transit_data_archivers.core.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.core.configuration.FetchInterval
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
@@ -11,7 +12,8 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 internal data class Configuration(
-    override val database: DatabaseConfiguration,
+    override val database: DatabaseConfiguration = DatabaseConfiguration(),
+    override val fallback: FallbackConfiguration = FallbackConfiguration(),
     val fetchInterval: FetchInterval = FetchInterval(30.seconds),
     override val callTimeout: Duration = 15.seconds,
     val storeResponseBody: Boolean = false,

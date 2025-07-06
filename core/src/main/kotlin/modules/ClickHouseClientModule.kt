@@ -3,10 +3,13 @@ package systems.choochoo.transit_data_archivers.core.modules
 import com.clickhouse.client.api.Client
 import dagger.Module
 import dagger.Provides
+import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import systems.choochoo.transit_data_archivers.core.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.core.utils.constructUserAgentString
+
+private val log = KotlinLogging.logger {}
 
 @Module
 class ClickHouseClientModule() {
@@ -26,11 +29,11 @@ class ClickHouseClientModule() {
                 .serverSetting("input_format_try_infer_dates", "0")
                 .serverSetting("input_format_try_infer_datetimes", "0")
                 .setUsername(database.username)
-                .setPassword(database.password?.value ?: "")
+                .setPassword(database.password.value)
                 .build()
 
             if (!client.ping()) {
-                throw RuntimeException("Could not ping ClickHouse server")
+                log.warn { "Could not ping ClickHouse server; writes may fail" }
             }
 
             return client

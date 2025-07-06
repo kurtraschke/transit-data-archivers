@@ -166,6 +166,9 @@
                             </goals>
                         </execution>
                     </executions>
+                    <configuration>
+                        <reuseForks>false</reuseForks>
+                    </configuration>
                 </plugin>
 
                 <plugin>
@@ -588,6 +591,13 @@
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
                 <version>26.0.2</version>
+            </dependency>
+
+            <!-- zstd-jni -->
+            <dependency>
+                <groupId>com.github.luben</groupId>
+                <artifactId>zstd-jni</artifactId>
+                <version>1.5.7-4</version>
             </dependency>
 
         </dependencies>

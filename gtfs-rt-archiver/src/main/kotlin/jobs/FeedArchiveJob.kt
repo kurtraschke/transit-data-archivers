@@ -3,6 +3,7 @@
 package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
 import com.clickhouse.client.api.Client
+import com.clickhouse.client.api.ClientException
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -32,6 +33,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.quartz.*
 import org.slf4j.MDC
+import systems.choochoo.transit_data_archivers.core.utils.FallbackWriter
 import systems.choochoo.transit_data_archivers.core.utils.ignoreAllTLSErrors
 import systems.choochoo.transit_data_archivers.gtfsrt.Feed
 import systems.choochoo.transit_data_archivers.gtfsrt.cacheMetrics
@@ -45,13 +47,8 @@ import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
 import kotlin.math.pow
 import kotlin.math.roundToLong
+import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
-import kotlin.time.toJavaInstant
-import kotlin.time.toKotlinDuration
-import kotlin.time.toKotlinInstant
 import java.lang.Boolean as jBoolean
 
 const val LAST_ETAG = "lastETag"
@@ -69,6 +66,12 @@ private val fetchCount = Counter.builder()
 private val uncaughtErrorCount = Counter.builder()
     .name("uncaught_exception_total")
     .help("number of uncaught exceptions")
+    .labelNames("producer", "feed")
+    .register()
+
+private val fallbackArchiveCount = Counter.builder()
+    .name("fallback_archive_count")
+    .help("number of fetches written to fallback destination")
     .labelNames("producer", "feed")
     .register()
 
@@ -150,6 +153,9 @@ internal class FeedArchiveJob : Job {
 
     @Inject
     lateinit var clickHouseClient: Client
+
+    @Inject
+    lateinit var fallbackWriter: FallbackWriter
 
     lateinit var feed: Feed
 
@@ -292,33 +298,45 @@ internal class FeedArchiveJob : Job {
                 val s = objectMapperCache.get(feed.extensions)
                     .writeValueAsBytes(fc)
 
-                val r = ByteArrayInputStream(s)
-                    .use {
-                        clickHouseClient.insert(
-                            "feed_contents",
-                            listOf(
-                                "producer",
-                                "feed",
-                                "fetch_time",
-                                "error_message",
-                                "status_code",
-                                "status_message",
-                                "protocol",
-                                "response_headers",
-                                "response_time_millis",
-                                "response_body_length",
-                                "enabled_extensions",
-                                "response_body_b64",
-                                "response_contents"
-                            ),
-                            it,
-                            JSONEachRow
-                        )
-                    }
+                try {
+                    val r = ByteArrayInputStream(s)
+                        .use {
+                            clickHouseClient.insert(
+                                "feed_contents",
+                                listOf(
+                                    "producer",
+                                    "feed",
+                                    "fetch_time",
+                                    "error_message",
+                                    "status_code",
+                                    "status_message",
+                                    "protocol",
+                                    "response_headers",
+                                    "response_time_millis",
+                                    "response_body_length",
+                                    "enabled_extensions",
+                                    "response_body_b64",
+                                    "response_contents"
+                                ),
+                                it,
+                                JSONEachRow
+                            )
+                        }
 
-                val rows = r.get().writtenRows
+                    val rows = r.get().writtenRows
 
-                log.trace { "Wrote $rows rows" }
+                    log.trace { "Wrote $rows rows" }
+                } catch (e: ClientException) {
+                    log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
+
+                    fallbackArchiveCount.labelValues(fc.producer, fc.feed).inc()
+
+                    fallbackWriter.write(
+                        linkedMapOf("producer" to fc.producer, "feed" to fc.feed),
+                        fc.fetchTime,
+                        s
+                    )
+                }
             }
 
             if (fc.status == SUCCESS) {

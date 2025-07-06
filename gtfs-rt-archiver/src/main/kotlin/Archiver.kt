@@ -21,6 +21,7 @@ import systems.choochoo.transit_data_archivers.core.listeners.SchedulerShutdownL
 import systems.choochoo.transit_data_archivers.core.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.core.modules.ClickHouseClientModule
 import systems.choochoo.transit_data_archivers.core.modules.CookieHandlerModule
+import systems.choochoo.transit_data_archivers.core.modules.FallbackWriterModule
 import systems.choochoo.transit_data_archivers.core.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.core.modules.QuartzSchedulerModule
 import systems.choochoo.transit_data_archivers.core.utils.randomDuration
@@ -43,6 +44,7 @@ private val log = KotlinLogging.logger {}
         ClickHouseClientModule::class,
         CookieHandlerModule::class,
         OkHttpClientModule::class,
+        FallbackWriterModule::class,
         DaggerJobFactoryModule::class,
         QuartzSchedulerModule::class,
     ]

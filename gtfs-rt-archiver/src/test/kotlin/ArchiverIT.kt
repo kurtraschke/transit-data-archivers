@@ -2,7 +2,7 @@ package systems.choochoo.transit_data_archivers.gtfsrt
 
 import com.clickhouse.client.api.Client
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
@@ -60,6 +60,51 @@ class ArchiverIT {
     }
 
     companion object {
+        private val TEST_SETUP_SQL = """
+            CREATE TABLE feed_contents
+            (
+                producer LowCardinality(String),
+                feed LowCardinality(String),
+                fetch_time DateTime('UTC') CODEC(DoubleDelta, LZ4),
+                is_error Bool,
+                error_message Nullable(String) CODEC(ZSTD),
+                response_time_millis Nullable(UInt32) CODEC(Delta, LZ4),
+                status_code Nullable(UInt16),
+                status_message LowCardinality(Nullable(String)),
+                protocol LowCardinality(Nullable(String)),
+                response_headers Nullable(JSON) CODEC(ZSTD(3)),
+                response_body_b64 Nullable(String) EPHEMERAL,
+                response_body Nullable(String) DEFAULT tryBase64Decode(response_body_b64) CODEC(ZSTD(3)),
+                response_body_length Nullable(UInt32) CODEC(Delta, LZ4),
+                response_contents Nullable(JSON) CODEC(ZSTD(3)),
+                enabled_extensions Array(LowCardinality(String))
+            )
+            ENGINE = MergeTree
+            ORDER BY (producer, feed, fetch_time);
+            """.trimIndent()
+
+        private val TEST_CONFIGURATION_YAML = """
+            feeds:
+              - producer: MBTA
+                feed: TU
+                feedUrl: https://cdn.mbta.com/realtime/TripUpdates.pb
+                ignoreTLSErrors: true
+            
+              - producer: MBTA
+                feed: VP
+                feedUrl: https://cdn.mbta.com/realtime/VehiclePositions.pb
+                ignoreTLSErrors: true
+            
+              - producer: MBTA
+                feed: Alerts
+                feedUrl: https://cdn.mbta.com/realtime/Alerts.pb
+                ignoreTLSErrors: true
+            
+              - producer: Test
+                feed: Does Not Exist
+                feedUrl: http://streetcarnameddesire.test/tripUpdates.pb
+                """.trimIndent()
+
         @Container
         @JvmField
         var chContainer: ClickHouseContainer = ClickHouseContainer(
@@ -73,48 +118,3 @@ class ArchiverIT {
             )
     }
 }
-
-const val TEST_SETUP_SQL = """
-CREATE TABLE feed_contents
-(
-    producer LowCardinality(String),
-    feed LowCardinality(String),
-    fetch_time DateTime('UTC') CODEC(DoubleDelta, LZ4),
-    is_error Bool,
-    error_message Nullable(String) CODEC(ZSTD),
-    response_time_millis Nullable(UInt32) CODEC(Delta, LZ4),
-    status_code Nullable(UInt16),
-    status_message LowCardinality(Nullable(String)),
-    protocol LowCardinality(Nullable(String)),
-    response_headers Nullable(JSON) CODEC(ZSTD(3)),
-    response_body_b64 Nullable(String) EPHEMERAL,
-    response_body Nullable(String) DEFAULT tryBase64Decode(response_body_b64) CODEC(ZSTD(3)),
-    response_body_length Nullable(UInt32) CODEC(Delta, LZ4),
-    response_contents Nullable(JSON) CODEC(ZSTD(3)),
-    enabled_extensions Array(LowCardinality(String))
-)
-ENGINE = MergeTree
-ORDER BY (producer, feed, fetch_time);
-"""
-
-const val TEST_CONFIGURATION_YAML = """
-feeds:
-  - producer: MBTA
-    feed: TU
-    feedUrl: https://cdn.mbta.com/realtime/TripUpdates.pb
-    ignoreTLSErrors: true
-
-  - producer: MBTA
-    feed: VP
-    feedUrl: https://cdn.mbta.com/realtime/VehiclePositions.pb
-    ignoreTLSErrors: true
-
-  - producer: MBTA
-    feed: Alerts
-    feedUrl: https://cdn.mbta.com/realtime/Alerts.pb
-    ignoreTLSErrors: true
-
-  - producer: Test
-    feed: Does Not Exist
-    feedUrl: http://streetcarnameddesire.test/tripUpdates.pb
-"""
