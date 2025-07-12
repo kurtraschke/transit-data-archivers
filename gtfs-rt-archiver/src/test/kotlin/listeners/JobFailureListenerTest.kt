@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.gtfsrt.listeners
 
 import io.mockk.every
@@ -10,7 +8,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 
 @ExtendWith(MockKExtension::class)
