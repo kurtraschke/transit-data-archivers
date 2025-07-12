@@ -7,6 +7,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
+import okhttp3.brotli.BrotliInterceptor
 import okhttp3.java.net.cookiejar.JavaNetCookieJar
 import systems.choochoo.transit_data_archivers.core.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
@@ -30,6 +31,7 @@ class OkHttpClientModule() {
             return OkHttpClient.Builder()
                 .cookieJar(jar)
                 .callTimeout(configuration.callTimeout)
+                .addInterceptor(BrotliInterceptor)
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request()
