@@ -2,6 +2,7 @@
 
 package systems.choochoo.transit_data_archivers.trackernet.listeners
 
+import io.github.oshai.kotlinlogging.slf4j.toKLogger
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
 import org.quartz.JobKey
@@ -14,6 +15,8 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
 internal class FixedDelayJobListener(val key: JobKey, val interval: Duration) : JobListenerSupport() {
+    private val log = super.log.toKLogger()
+
     override fun getName(): String = "FixedDelayJobListener for $key"
 
     override fun jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException?) {
@@ -30,7 +33,7 @@ internal class FixedDelayJobListener(val key: JobKey, val interval: Duration) : 
             .startAt(Date.from(nextFireTime.toJavaInstant()))
             .build()
 
-        log.debug("Rescheduling job {} for {}", jobKey, nextFireTime)
+        log.debug { "Rescheduling job $jobKey for $nextFireTime" }
 
         scheduler.rescheduleJob(triggerKey, newTrigger)
     }

@@ -13,7 +13,7 @@ import java.nio.file.Path
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 @Command(
     name = "trackernet-archiver", description = ["Archive London Underground Trackernet feeds to a ClickHouse database"]
@@ -35,7 +35,7 @@ internal class ArchiverCli : Callable<Int> {
                 .build()
                 .loadConfigOrThrow<Configuration>()
         } catch (ce: ConfigException) {
-            logger.error(ce) { "Could not load configuration file" }
+            log.error(ce) { "Could not load configuration file" }
 
             return ExitCode.USAGE
         }

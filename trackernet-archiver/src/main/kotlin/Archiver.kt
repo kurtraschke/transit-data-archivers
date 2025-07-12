@@ -32,7 +32,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 private const val FETCH_GROUP = "line-fetch"
 
@@ -114,11 +114,11 @@ internal class Archiver @Inject constructor(
 
     fun start() {
         scheduler.start()
-        logger.info { "Archiver has started." }
+        log.info { "Archiver has started." }
     }
 
     fun stop() {
         scheduler.shutdown(true)
-        logger.warn { "Archiver has stopped." }
+        log.warn { "Archiver has stopped." }
     }
 }

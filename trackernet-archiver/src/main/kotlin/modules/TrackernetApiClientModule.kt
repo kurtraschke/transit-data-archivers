@@ -17,7 +17,7 @@ import uk.co.lul.trackernet.predictiondetail.PredictionDetail
 import uk.co.lul.trackernet.predictionsummary.PredictionSummary
 import kotlin.time.Duration.Companion.minutes
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 @Module
 internal class TrackernetApiClientModule() {
@@ -41,7 +41,7 @@ internal class TrackernetApiClientModule() {
                         .addInterceptor { chain ->
                             val delayedBy = rateLimiter.acquire(1)
                             if (delayedBy > 0.0) {
-                                logger.trace { "Request to ${chain.request().url} delayed by $delayedBy seconds for rate-limiting." }
+                                log.trace { "Request to ${chain.request().url} delayed by $delayedBy seconds for rate-limiting." }
                             }
                             chain.proceed(chain.request())
                         }

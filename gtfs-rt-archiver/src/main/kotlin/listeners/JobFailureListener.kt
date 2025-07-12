@@ -2,6 +2,7 @@
 
 package systems.choochoo.transit_data_archivers.gtfsrt.listeners
 
+import io.github.oshai.kotlinlogging.slf4j.toKLogger
 import org.quartz.*
 import org.quartz.DateBuilder.IntervalUnit.SECOND
 import org.quartz.DateBuilder.futureDate
@@ -29,6 +30,8 @@ internal class JobFailureListener(private val key: JobKey) : JobListenerSupport(
     private var pauseCount = 0
     private var lastFailure: Instant? = null
 
+    private val log = super.log.toKLogger()
+
     override fun getName(): String = "JobFailureListener for ${this.key}"
 
     override fun jobWasExecuted(context: JobExecutionContext, jobException: JobExecutionException?) {
@@ -54,12 +57,7 @@ internal class JobFailureListener(private val key: JobKey) : JobListenerSupport(
                 )
                     .coerceAtMost(MAX_PAUSE_DURATION)
 
-                log.warn(
-                    "Pausing execution of job {} for {} due to consecutive failure count exceeding {}",
-                    jobKey,
-                    pauseDuration,
-                    MAX_CONSECUTIVE_FAILURES
-                )
+                log.warn { "Pausing execution of job $jobKey for $pauseDuration due to consecutive failure count exceeding $MAX_CONSECUTIVE_FAILURES" }
 
                 scheduler.pauseJob(jobKey)
 
@@ -79,11 +77,7 @@ internal class JobFailureListener(private val key: JobKey) : JobListenerSupport(
 
             lastFailure?.let {
                 if ((it - fireTime).absoluteValue >= RESET_PAUSE_AFTER) {
-                    log.info(
-                        "Resetting pause count for job {} as the last failure was at least {} ago",
-                        jobKey,
-                        RESET_PAUSE_AFTER
-                    )
+                    log.info { "Resetting pause count for job $jobKey as the last failure was at least $RESET_PAUSE_AFTER ago" }
                     pauseCount = 0
                     lastFailure = null
                 }

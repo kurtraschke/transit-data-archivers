@@ -30,7 +30,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 private val om = jsonMapper {
     addModules(
@@ -59,7 +59,7 @@ internal class LineArchiveJob : Job {
     override fun execute(context: JobExecutionContext) {
         val fetchTime = context.fireTime.toInstant().toKotlinInstant()
 
-        logger.trace { "Beginning fetch for $lineCode" }
+        log.trace { "Beginning fetch for $lineCode" }
         val st = Stopwatch.createStarted()
 
         val summaryCall = service.getPredictionSummary(lineCode)
@@ -101,7 +101,7 @@ internal class LineArchiveJob : Job {
                         if (lineCode == pd.line && stationCode == pd.station.stationCode) {
                             Pair(stationCode, pd)
                         } else {
-                            logger.error {
+                            log.error {
                                 "Trackernet PredictionDetailed API returned line and station code" +
                                         " (${pd.line}, ${pd.station.stationCode})" +
                                         " when ($lineCode, $stationCode) was requested"
@@ -109,11 +109,11 @@ internal class LineArchiveJob : Job {
                             null
                         }
                     } else {
-                        logger.error { "HTTP error ${detailResponse.code()} ${detailResponse.message()} while fetching details for station $stationCode on line $lineCode" }
+                        log.error { "HTTP error ${detailResponse.code()} ${detailResponse.message()} while fetching details for station $stationCode on line $lineCode" }
                         null
                     }
                 } catch (ex: IOException) {
-                    logger.error(ex) { "Other IO error while fetching details for station $stationCode on line $lineCode" }
+                    log.error(ex) { "Other IO error while fetching details for station $stationCode on line $lineCode" }
                     null
                 }
             }
@@ -127,7 +127,7 @@ internal class LineArchiveJob : Job {
             }
 
         st.stop()
-        logger.trace { "Fetch complete for $lineCode; took $st" }
+        log.trace { "Fetch complete for $lineCode; took $st" }
 
         run {
             val os = ByteArrayOutputStream()
@@ -148,7 +148,7 @@ internal class LineArchiveJob : Job {
                     ).get()
                 }
 
-            logger.trace { "Inserted ${response.writtenRows} summary rows" }
+            log.trace { "Inserted ${response.writtenRows} summary rows" }
         }
 
         run {
@@ -175,7 +175,7 @@ internal class LineArchiveJob : Job {
 
             CompletableFuture.allOf(p, f).join()
 
-            logger.trace { "Inserted ${f.get().writtenRows} detail rows" }
+            log.trace { "Inserted ${f.get().writtenRows} detail rows" }
         }
 
     }
