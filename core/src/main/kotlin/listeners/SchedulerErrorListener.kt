@@ -9,12 +9,9 @@ import org.quartz.listeners.SchedulerListenerSupport
 import kotlin.concurrent.thread
 
 @Singleton
-class SchedulerErrorListener @Inject constructor() : SchedulerListenerSupport() {
+class SchedulerErrorListener @Inject constructor(private val lazyScheduler: Lazy<Scheduler>) : SchedulerListenerSupport() {
     @Volatile
     var schedulerTerminatedWithError = false
-
-    @Inject
-    lateinit var lazyScheduler: Lazy<Scheduler>
 
     override fun schedulerError(msg: String, cause: SchedulerException) {
         log.error("Shutting down due to critical error", cause)
