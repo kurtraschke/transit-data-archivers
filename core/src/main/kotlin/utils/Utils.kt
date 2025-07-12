@@ -41,6 +41,6 @@ fun OkHttpClient.Builder.ignoreAllTLSErrors(): OkHttpClient.Builder {
     return this
 }
 
-fun randomDuration(d: Duration): Duration {
-    return d * Random.nextDouble(0.0, 0.5)
+fun randomDuration(d: Duration, random: Random = Random.Default): Duration {
+    return d * random.nextDouble(0.0, 0.5)
 }

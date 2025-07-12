@@ -380,6 +380,15 @@
                 <scope>test</scope>
             </dependency>
 
+            <!-- mockk -->
+
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk-jvm</artifactId>
+                <version>1.14.4</version>
+                <scope>test</scope>
+            </dependency>
+
             <!-- testcontainers -->
 
             <dependency>

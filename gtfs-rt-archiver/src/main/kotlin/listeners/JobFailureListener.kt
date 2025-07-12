@@ -48,11 +48,11 @@ internal class JobFailureListener(private val key: JobKey) : JobListenerSupport(
                 consecutiveFailureCount = 0
                 pauseCount++
 
-                var pauseDuration = (PAUSE_PERIOD * PAUSE_ESCALATION.pow(pauseCount))
-
-                pauseDuration = jitter(pauseDuration, 0.1)
-                pauseDuration = roundDuration(pauseDuration, 15.seconds)
-                pauseDuration = pauseDuration.coerceAtMost(MAX_PAUSE_DURATION)
+                val pauseDuration = quantizeDuration(
+                    jitter((PAUSE_PERIOD * PAUSE_ESCALATION.pow(pauseCount)), 0.1),
+                    15.seconds
+                )
+                    .coerceAtMost(MAX_PAUSE_DURATION)
 
                 log.warn(
                     "Pausing execution of job {} for {} due to consecutive failure count exceeding {}",
@@ -92,14 +92,12 @@ internal class JobFailureListener(private val key: JobKey) : JobListenerSupport(
     }
 }
 
-private fun roundDuration(duration: Duration, interval: Duration): Duration {
+internal fun quantizeDuration(duration: Duration, interval: Duration): Duration {
     return interval * ceil(duration / interval)
 }
 
-private fun jitter(duration: Duration, jitterFactor: Double): Duration {
+internal fun jitter(duration: Duration, jitterFactor: Double, random: Random = Random.Default): Duration {
     require(jitterFactor in 0.0..1.0)
-    val basePiece = duration * (1.0 - jitterFactor)
-    val jitterable = duration * jitterFactor
-    val withJitter = jitterable * Random.nextDouble()
-    return basePiece + withJitter
+
+    return duration * random.nextDouble(1.0 - jitterFactor, 1.0)
 }
