@@ -307,16 +307,17 @@ internal class FeedArchiveJob : Job {
                                     "producer",
                                     "feed",
                                     "fetch_time",
+                                    "is_error",
                                     "error_message",
+                                    "response_time_millis",
                                     "status_code",
                                     "status_message",
                                     "protocol",
                                     "response_headers",
-                                    "response_time_millis",
-                                    "response_body_length",
-                                    "enabled_extensions",
                                     "response_body_b64",
-                                    "response_contents"
+                                    "response_body_length",
+                                    "response_contents",
+                                    "enabled_extensions"
                                 ),
                                 it,
                                 JSONEachRow
