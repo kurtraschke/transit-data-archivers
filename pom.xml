@@ -11,7 +11,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>core</module>
+        <module>common</module>
         <module>gtfs-rt-bindings</module>
         <module>gtfs-rt-archiver</module>
         <module>clickhouse-udfs</module>

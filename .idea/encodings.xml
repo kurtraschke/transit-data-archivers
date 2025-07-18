@@ -5,9 +5,9 @@
     <file url="file://$PROJECT_DIR$/api/src/main/kotlin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/api/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/clickhouse-udfs/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/java" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/kotlin" charset="UTF-8" />
-    <file url="file://$PROJECT_DIR$/core/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/kotlin" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/common/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/fetcher/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/fetcher/src/main/kotlin" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/fetcher/src/main/resources" charset="UTF-8" />

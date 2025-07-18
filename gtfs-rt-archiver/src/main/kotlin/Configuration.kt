@@ -2,10 +2,10 @@ package systems.choochoo.transit_data_archivers.gtfsrt
 
 import arrow.core.Option
 import com.sksamuel.hoplite.Masked
-import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
-import systems.choochoo.transit_data_archivers.core.configuration.DatabaseConfiguration
-import systems.choochoo.transit_data_archivers.core.configuration.FallbackConfiguration
-import systems.choochoo.transit_data_archivers.core.configuration.FetchInterval
+import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConfiguration
+import systems.choochoo.transit_data_archivers.common.configuration.FallbackConfiguration
+import systems.choochoo.transit_data_archivers.common.configuration.FetchInterval
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
 import kotlin.time.Duration

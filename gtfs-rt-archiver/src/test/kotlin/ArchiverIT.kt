@@ -13,8 +13,8 @@ import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import picocli.CommandLine
 import picocli.CommandLine.ExitCode
-import systems.choochoo.transit_data_archivers.core.utils.clickhouseImageName
-import systems.choochoo.transit_data_archivers.core.utils.getRowCount
+import systems.choochoo.transit_data_archivers.common.utils.clickhouseImageName
+import systems.choochoo.transit_data_archivers.common.utils.getRowCount
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension

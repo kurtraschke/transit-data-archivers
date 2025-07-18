@@ -2,7 +2,7 @@ package systems.choochoo.transit_data_archivers.gtfsrt.modules
 
 import dagger.Binds
 import dagger.Module
-import systems.choochoo.transit_data_archivers.core.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
 import systems.choochoo.transit_data_archivers.gtfsrt.Configuration
 
 @Module
