@@ -33,7 +33,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <protobuf.version>4.31.1</protobuf.version>
-        <dagger.version>2.56.2</dagger.version>
+        <dagger.version>2.57</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.9</jaxb-tools.version>
@@ -385,7 +385,7 @@
             <dependency>
                 <groupId>io.mockk</groupId>
                 <artifactId>mockk-jvm</artifactId>
-                <version>1.14.4</version>
+                <version>1.14.5</version>
                 <scope>test</scope>
             </dependency>
 
