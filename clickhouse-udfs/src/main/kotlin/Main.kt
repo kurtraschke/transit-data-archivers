@@ -33,10 +33,10 @@ class CliParent
 @Command(name = "reparse")
 class Reparse : Callable<Int> {
     @Spec
-    lateinit var spec: CommandSpec
+    private lateinit var spec: CommandSpec
 
     @Parameters(index = "0", defaultValue = "-")
-    lateinit var input: File
+    private lateinit var input: File
 
     val inputStream: InputStream
         get() = if (input.name.equals("-")) {

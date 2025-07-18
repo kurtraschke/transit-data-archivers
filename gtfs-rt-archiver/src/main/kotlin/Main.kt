@@ -28,12 +28,12 @@ private val log = KotlinLogging.logger {}
 @Command(
     name = "gtfs-rt-archiver", description = ["Archive GTFS-rt feeds to a ClickHouse database"]
 )
-class ArchiverCli : Callable<Int> {
+internal class ArchiverCli : Callable<Int> {
     @Option(names = ["--one-shot"], description = ["Enable one-shot mode: archive each feed once, then exit"])
-    var oneShot: Boolean = false
+    private var oneShot: Boolean = false
 
     @Parameters(index = "0", description = ["Path to configuration file"], paramLabel = "PATH")
-    lateinit var configurationFile: Path
+    private lateinit var configurationFile: Path
 
     override fun call(): Int {
         val configuration = try {

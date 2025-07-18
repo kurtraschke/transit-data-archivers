@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.gtfsrt.dump
 
 import com.fasterxml.jackson.module.kotlin.jsonMapper
@@ -6,6 +8,8 @@ import com.google.protobuf.ExtensionRegistry
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
@@ -15,36 +19,34 @@ import systems.choochoo.transit_data_archivers.gtfsrt.dump.TimestampDisplay.UTC
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
 import java.nio.file.Path
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME
-import java.util.*
 import java.util.concurrent.Callable
 import kotlin.io.path.readBytes
 import kotlin.system.exitProcess
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 
 @Command(name = "gtfs-rt-dump", mixinStandardHelpOptions = true)
-class GtfsRtDump : Callable<Int> {
+private class GtfsRtDump : Callable<Int> {
 
     @Option(
         names = ["-O", "--output-format"],
         paramLabel = "OUTPUT_FORMAT",
-        description = ["Output format to generate. Valid values: ${'$'}{COMPLETION-CANDIDATES}"]
+        description = [$$"Output format to generate. Valid values: ${COMPLETION-CANDIDATES}"]
     )
     private var outputFormat: OutputFormat = PBTEXT
 
     @Option(
         names = ["-T", "--timestamp-display"],
         paramLabel = "TIMESTAMP_FORMAT",
-        description = ["Output format to generate. Valid values: ${'$'}{COMPLETION-CANDIDATES}"]
+        description = [$$"Output format to generate. Valid values: ${COMPLETION-CANDIDATES}"]
     )
     private var timestampDisplay: TimestampDisplay? = null
 
     @Option(
         names = ["-E", "--enable-extension"],
         paramLabel = "EXTENSION",
-        description = ["GTFS-rt extension to enable. Valid values: ${'$'}{COMPLETION-CANDIDATES}"]
+        description = [$$"GTFS-rt extension to enable. Valid values: ${COMPLETION-CANDIDATES}"]
     )
     private var enabledExtensions: Set<GtfsRealtimeExtension> = emptySet()
 
@@ -68,7 +70,7 @@ class GtfsRtDump : Callable<Int> {
 
         val out = when (outputFormat) {
             OutputFormat.JSON -> {
-                val om = jsonMapper {
+                jsonMapper {
                     addModules(
                         kotlinModule(),
                         ProtobufModule(
@@ -78,8 +80,8 @@ class GtfsRtDump : Callable<Int> {
                         )
                     )
                 }
-
-                om.writerWithDefaultPrettyPrinter().writeValueAsString(fm)
+                    .writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(fm)
             }
 
             PBTEXT -> fm.toString()
@@ -98,17 +100,17 @@ class GtfsRtDump : Callable<Int> {
 fun main(args: Array<String>): Unit =
     exitProcess(CommandLine(GtfsRtDump()).setCaseInsensitiveEnumValuesAllowed(true).execute(*args))
 
-internal enum class OutputFormat {
+private enum class OutputFormat {
     JSON,
     PBTEXT
 }
 
-internal enum class TimestampDisplay {
+private enum class TimestampDisplay {
     LOCAL,
     UTC
 }
 
-internal class InputOptions {
+private class InputOptions {
     @Option(names = ["-F", "--file"], paramLabel = "FILE", description = ["Path to GTFS-rt file to read."])
     val inputFile: Path? = null
 
@@ -125,17 +127,14 @@ private fun enrichTimestamps(out: String, td: TimestampDisplay): String {
         if (m == "" || m == "0") {
             matchResult.value
         } else {
-            val ts = Instant.ofEpochSecond(m.toLong())
-
-            val f = when (td) {
-                LOCAL -> {
-                    ISO_LOCAL_DATE_TIME.format(ts.atZone(TimeZone.getDefault().toZoneId()))
-                }
-
-                UTC -> {
-                    ISO_LOCAL_DATE_TIME.withZone(ZoneId.of("UTC")).format(ts) + "Z"
-                }
-            }
+            val f = Instant
+                .fromEpochSeconds(m.toLong())
+                .toLocalDateTime(
+                    when (td) {
+                        UTC -> TimeZone.UTC
+                        LOCAL -> TimeZone.currentSystemDefault()
+                    }
+                ).toString()
 
             "${matchResult.value}\t/* $f */"
         }
