@@ -4,6 +4,7 @@ import arrow.core.Option
 import com.sksamuel.hoplite.Masked
 import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConfiguration
+import systems.choochoo.transit_data_archivers.common.configuration.FailureResponse
 import systems.choochoo.transit_data_archivers.common.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FetchInterval
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
@@ -19,6 +20,7 @@ internal data class Configuration(
     val storeResponseBody: Boolean = false,
     val storeResponseBodyOnError: Boolean = true,
     override val operatorContact: String?,
+    val failureResponse: FailureResponse = FailureResponse(),
     val feeds: List<Feed>
 ): CommonConfiguration
 

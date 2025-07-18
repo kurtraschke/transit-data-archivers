@@ -26,7 +26,7 @@ import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.common.modules.QuartzSchedulerModule
 import systems.choochoo.transit_data_archivers.common.utils.randomDuration
 import systems.choochoo.transit_data_archivers.gtfsrt.jobs.FeedArchiveJob
-import systems.choochoo.transit_data_archivers.gtfsrt.listeners.JobFailureListener
+import systems.choochoo.transit_data_archivers.gtfsrt.listeners.JobFailureListenerFactory
 import systems.choochoo.transit_data_archivers.gtfsrt.modules.DaggerJobFactoryModule
 import systems.choochoo.transit_data_archivers.gtfsrt.modules.ConfigurationModule
 import java.util.Date
@@ -39,13 +39,13 @@ private val log = KotlinLogging.logger {}
 
 @Component(
     modules = [
-        ConfigurationModule::class,
         ApplicationVersionModule::class,
         ClickHouseClientModule::class,
+        ConfigurationModule::class,
         CookieHandlerModule::class,
-        OkHttpClientModule::class,
-        FallbackWriterModule::class,
         DaggerJobFactoryModule::class,
+        FallbackWriterModule::class,
+        OkHttpClientModule::class,
         QuartzSchedulerModule::class,
     ]
 )
@@ -69,9 +69,10 @@ internal interface ArchiverFactory {
 }
 
 internal class Archiver @Inject constructor(
-    val configuration: Configuration,
-    @param:Named("oneShot") val oneShot: Boolean,
-    val scheduler: Scheduler,
+    configuration: Configuration,
+    @Named("oneShot") oneShot: Boolean,
+    private val scheduler: Scheduler,
+    jobFailureListenerFactory: JobFailureListenerFactory,
 ) {
     init {
         val jobs = configuration.feeds.map { feed ->
@@ -89,7 +90,7 @@ internal class Archiver @Inject constructor(
                 .usingJobData(jobDataMap)
                 .build()
 
-            scheduler.listenerManager.addJobListener(JobFailureListener(job.key), KeyMatcher.keyEquals(job.key))
+            scheduler.listenerManager.addJobListener(jobFailureListenerFactory.create(job.key), KeyMatcher.keyEquals(job.key))
 
             val trigger = newTrigger()
                 .withIdentity(feed.feed, feed.producer)
