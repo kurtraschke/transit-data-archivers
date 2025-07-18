@@ -6,7 +6,7 @@ import dagger.Provides
 import io.github.oshai.kotlinlogging.KotlinLogging
 import jakarta.inject.Singleton
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
-import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.utils.constructUserAgentString
 
 private val log = KotlinLogging.logger {}
@@ -16,7 +16,7 @@ class ClickHouseClientModule() {
     companion object {
         @Provides
         @Singleton
-        fun provideClient(configuration: ConfigurationCore, appVersion: ApplicationVersion): Client {
+        fun provideClient(configuration: CommonConfiguration, appVersion: ApplicationVersion): Client {
             val userAgentString = constructUserAgentString(appVersion, configuration.operatorContact)
             val database = configuration.database
 

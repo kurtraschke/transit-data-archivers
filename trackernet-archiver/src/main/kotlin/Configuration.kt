@@ -1,7 +1,7 @@
 package systems.choochoo.transit_data_archivers.trackernet
 
 import com.sksamuel.hoplite.Masked
-import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FetchInterval
@@ -29,7 +29,7 @@ internal data class Configuration (
     val derateFactor: DerateFactor = DerateFactor(0.8),
     override val callTimeout: Duration = 2.seconds,
     val lines: List<LineConfiguration>
-) : ConfigurationCore
+) : CommonConfiguration
 
 internal data class LineConfiguration(
     val lineCode: String,

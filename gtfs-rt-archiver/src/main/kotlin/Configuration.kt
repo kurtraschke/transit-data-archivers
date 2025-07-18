@@ -2,7 +2,7 @@ package systems.choochoo.transit_data_archivers.gtfsrt
 
 import arrow.core.Option
 import com.sksamuel.hoplite.Masked
-import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FetchInterval
@@ -20,7 +20,7 @@ internal data class Configuration(
     val storeResponseBodyOnError: Boolean = true,
     override val operatorContact: String?,
     val feeds: List<Feed>
-): ConfigurationCore
+): CommonConfiguration
 
 internal data class Feed(
     val producer: String,

@@ -3,7 +3,7 @@ package systems.choochoo.transit_data_archivers.common.modules
 import dagger.Module
 import dagger.Provides
 import jakarta.inject.Singleton
-import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.utils.DummyFallbackWriter
 import systems.choochoo.transit_data_archivers.common.utils.FallbackWriter
 import systems.choochoo.transit_data_archivers.common.utils.LocalPathFallbackWriter
@@ -13,7 +13,7 @@ class FallbackWriterModule {
     companion object {
         @Provides
         @Singleton
-        fun provideFallbackWriter(configuration: ConfigurationCore): FallbackWriter =
+        fun provideFallbackWriter(configuration: CommonConfiguration): FallbackWriter =
             if (!configuration.fallback.enabled) {
                 DummyFallbackWriter()
             } else {

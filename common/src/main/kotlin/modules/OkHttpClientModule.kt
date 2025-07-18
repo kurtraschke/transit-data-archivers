@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.brotli.BrotliInterceptor
 import okhttp3.java.net.cookiejar.JavaNetCookieJar
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
-import systems.choochoo.transit_data_archivers.common.configuration.ConfigurationCore
+import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.utils.constructUserAgentString
 import java.net.CookieHandler
 
@@ -21,7 +21,7 @@ class OkHttpClientModule() {
     companion object {
         @Provides
         @Singleton
-        fun provideClient(configuration: ConfigurationCore, appVersion: ApplicationVersion, cookieHandler: CookieHandler): OkHttpClient {
+        fun provideClient(configuration: CommonConfiguration, appVersion: ApplicationVersion, cookieHandler: CookieHandler): OkHttpClient {
             val jar = JavaNetCookieJar(cookieHandler)
 
             val userAgentString = constructUserAgentString(appVersion, configuration.operatorContact, OkHttp.VERSION)
