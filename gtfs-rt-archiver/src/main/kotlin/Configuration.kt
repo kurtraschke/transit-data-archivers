@@ -2,11 +2,14 @@ package systems.choochoo.transit_data_archivers.gtfsrt
 
 import arrow.core.Option
 import com.sksamuel.hoplite.Masked
-import systems.choochoo.transit_data_archivers.common.configuration.CommonConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FailureResponse
 import systems.choochoo.transit_data_archivers.common.configuration.FallbackConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.FetchInterval
+import systems.choochoo.transit_data_archivers.common.configuration.HasCallTimeout
+import systems.choochoo.transit_data_archivers.common.configuration.HasDatabaseConfiguration
+import systems.choochoo.transit_data_archivers.common.configuration.HasFallbackConfiguration
+import systems.choochoo.transit_data_archivers.common.configuration.HasOperatorContact
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
 import kotlin.time.Duration
@@ -22,7 +25,7 @@ internal data class Configuration(
     override val operatorContact: String?,
     val failureResponse: FailureResponse = FailureResponse(),
     val feeds: List<Feed>
-): CommonConfiguration
+) : HasDatabaseConfiguration, HasFallbackConfiguration, HasOperatorContact, HasCallTimeout
 
 internal data class Feed(
     val producer: String,
