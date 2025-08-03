@@ -2,8 +2,8 @@
 
 package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
+import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
-import com.clickhouse.client.api.ClientException
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
 import com.fasterxml.jackson.datatype.guava.GuavaModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -327,7 +327,7 @@ internal class FeedArchiveJob : Job {
                     val rows = r.get().writtenRows
 
                     log.trace { "Wrote $rows rows" }
-                } catch (e: ClientException) {
+                } catch (e: ClickHouseException) {
                     log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
                     fallbackArchiveCount.labelValues(fc.producer, fc.feed).inc()
