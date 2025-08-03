@@ -3,12 +3,8 @@ package systems.choochoo.transit_data_archivers.gtfsrt.extensions
 import com.google.protobuf.ExtensionRegistry
 import com.google.transit.realtime.*
 
-internal interface RegisterableExtension {
-    fun registerExtension(registry: ExtensionRegistry)
-}
-
 @Suppress("unused")
-enum class GtfsRealtimeExtension : RegisterableExtension {
+enum class GtfsRealtimeExtension {
     OBA {
         override fun registerExtension(registry: ExtensionRegistry) {
             GtfsRealtimeOneBusAway.registerAllExtensions(registry)
@@ -43,6 +39,8 @@ enum class GtfsRealtimeExtension : RegisterableExtension {
         override fun registerExtension(registry: ExtensionRegistry) {
             GtfsRealtimeCrowding.registerAllExtensions(registry)
         }
-    }
+    };
+
+    abstract fun registerExtension(registry: ExtensionRegistry)
 }
 
