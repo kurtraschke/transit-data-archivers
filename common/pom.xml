@@ -143,11 +143,13 @@
         <dependency>
             <groupId>com.clickhouse</groupId>
             <artifactId>client-v2</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
@@ -177,6 +179,7 @@
         <dependency>
             <groupId>com.github.luben</groupId>
             <artifactId>zstd-jni</artifactId>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

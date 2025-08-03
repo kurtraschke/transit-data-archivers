@@ -313,6 +313,12 @@
             <artifactId>dagger</artifactId>
         </dependency>
 
+        <!-- zstd-jni -->
+        <dependency>
+            <groupId>com.github.luben</groupId>
+            <artifactId>zstd-jni</artifactId>
+        </dependency>
+
     </dependencies>
 
 </project>
