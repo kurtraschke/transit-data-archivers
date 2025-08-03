@@ -181,6 +181,13 @@
             <artifactId>zstd-jni</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- jackson databind -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>

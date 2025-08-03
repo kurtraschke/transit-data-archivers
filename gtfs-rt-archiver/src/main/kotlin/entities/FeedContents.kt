@@ -2,14 +2,16 @@
 
 package systems.choochoo.transit_data_archivers.gtfsrt.entities
 
-import com.fasterxml.jackson.annotation.JsonGetter
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonNaming
+import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import com.google.common.collect.ListMultimap
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import okhttp3.Protocol
+import systems.choochoo.transit_data_archivers.common.utils.EpochSecondInstant
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
@@ -28,6 +30,8 @@ internal data class FeedContents(
     var status: FetchStatus,
     var producer: String,
     var feed: String,
+    @get:JsonSerialize(using = EpochSecondInstant.Serializer::class)
+    @set:JsonDeserialize(using = EpochSecondInstant.Deserializer::class)
     var fetchTime: Instant,
     var errorMessage: String? = null,
     var statusCode: Int? = null,
@@ -64,7 +68,4 @@ internal data class FeedContents(
     @get:JsonIgnore
     @set:JsonIgnore
     var headerTimestamp: Instant? = null
-
-    @JsonGetter("fetch_time")
-    fun getFetchTimeEpoch() = fetchTime.epochSeconds
 }
