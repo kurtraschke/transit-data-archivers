@@ -8,6 +8,8 @@ import systems.choochoo.transit_data_archivers.common.utils.CompressionMode.*
 import java.net.URLEncoder
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
 import kotlin.io.path.writeBytes
 import kotlin.text.Charsets.UTF_8
 import kotlin.time.ExperimentalTime
@@ -15,18 +17,12 @@ import kotlin.time.Instant
 
 private val log = KotlinLogging.logger {}
 
-interface Compressor {
-    val filenameExtension: String
-
-    fun compress(input: ByteArray): ByteArray
-}
-
 interface FallbackWriter {
     fun write(partitionKeys: LinkedHashMap<String, String>, fetchTime: Instant, data: ByteArray)
 }
 
 @Suppress("unused")
-enum class CompressionMode : Compressor {
+enum class CompressionMode {
     NONE {
         override val filenameExtension = ""
 
@@ -36,7 +32,21 @@ enum class CompressionMode : Compressor {
         override val filenameExtension = ".zst"
 
         override fun compress(input: ByteArray): ByteArray = Zstd.compress(input)
-    }
+
+        override fun isAvailable() =
+            try {
+                Class.forName("com.github.luben.zstd.Zstd")
+                true
+            } catch (e: ClassNotFoundException) {
+                false
+            }
+    };
+
+    abstract val filenameExtension: String
+
+    abstract fun compress(input: ByteArray): ByteArray
+
+    open fun isAvailable(): Boolean = true
 }
 
 class DummyFallbackWriter : FallbackWriter {
@@ -45,11 +55,17 @@ class DummyFallbackWriter : FallbackWriter {
         fetchTime: Instant,
         data: ByteArray
     ) {
-     log.warn { "Discarding fetch at $fetchTime as fallback writer is not configured" }
+        log.warn { "Discarding fetch at $fetchTime as fallback writer is not configured" }
     }
 }
 
-class LocalPathFallbackWriter(val basePath: Path, val compressionMode: Compressor = NONE) : FallbackWriter {
+class LocalPathFallbackWriter(val basePath: Path, val compressionMode: CompressionMode = NONE) : FallbackWriter {
+    init {
+        require(basePath.exists()) { "Directory $basePath does not exist" }
+        require(basePath.isDirectory()) { "Directory $basePath is not a directory" }
+        require(compressionMode.isAvailable()) { "Compression mode $compressionMode is not available" }
+    }
+
     override fun write(partitionKeys: LinkedHashMap<String, String>, fetchTime: Instant, data: ByteArray) {
         val partitionPath = createPartitionPath(basePath, partitionKeys)
 

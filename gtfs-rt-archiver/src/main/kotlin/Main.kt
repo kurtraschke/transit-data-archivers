@@ -49,11 +49,6 @@ internal class ArchiverCli : Callable<Int> {
             return ExitCode.USAGE
         }
 
-        if (configuration.fallback.enabled && configuration.fallback.basePath == null) {
-            log.error { "Fallback archiving is enabled but base path is not set." }
-            return ExitCode.USAGE
-        }
-
         configuration.feeds
             .groupingBy { Pair(it.producer, it.feed) }
             .eachCount()
