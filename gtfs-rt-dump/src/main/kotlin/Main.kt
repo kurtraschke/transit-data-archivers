@@ -5,6 +5,8 @@ package systems.choochoo.transit_data_archivers.gtfsrt.dump
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.protobuf.ExtensionRegistry
+import com.google.protobuf.ExtensionRegistryLite
+import com.google.protobuf.Parser
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
@@ -50,6 +52,12 @@ private class GtfsRtDump : Callable<Int> {
     )
     private var enabledExtensions: Set<GtfsRealtimeExtension> = emptySet()
 
+    @Option(
+        names = ["-P", "--partial"],
+        description = ["Enable partial parsing of malformed Protocol Buffer messages"]
+    )
+    private var partial: Boolean = false
+
     @ArgGroup(exclusive = true)
     private var inputOptions: InputOptions = InputOptions()
 
@@ -66,7 +74,15 @@ private class GtfsRtDump : Callable<Int> {
         val registry = ExtensionRegistry.newInstance()
         enabledExtensions.forEach { it.registerExtension(registry) }
 
-        val fm = FeedMessage.parseFrom(input, registry)
+        val parser = FeedMessage.parser()
+
+        val parseFunction: (Parser<FeedMessage>, ByteArray, ExtensionRegistryLite) -> FeedMessage = if (partial) {
+            Parser<FeedMessage>::parsePartialFrom
+        } else {
+            Parser<FeedMessage>::parseFrom
+        }
+
+        val fm = parseFunction(parser, input, registry)
 
         val out = when (outputFormat) {
             OutputFormat.JSON -> {
