@@ -16,8 +16,6 @@ import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
 import systems.choochoo.transit_data_archivers.gtfsrt.dump.OutputFormat.PBTEXT
-import systems.choochoo.transit_data_archivers.gtfsrt.dump.TimestampDisplay.LOCAL
-import systems.choochoo.transit_data_archivers.gtfsrt.dump.TimestampDisplay.UTC
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
 import java.nio.file.Path
@@ -121,9 +119,10 @@ private enum class OutputFormat {
     PBTEXT
 }
 
-private enum class TimestampDisplay {
-    LOCAL,
-    UTC
+@Suppress("unused")
+private enum class TimestampDisplay(val tz: TimeZone) {
+    LOCAL(TimeZone.currentSystemDefault()),
+    UTC(TimeZone.UTC),
 }
 
 private class InputOptions {
@@ -145,12 +144,8 @@ private fun enrichTimestamps(out: String, td: TimestampDisplay): String {
         } else {
             val f = Instant
                 .fromEpochSeconds(m.toLong())
-                .toLocalDateTime(
-                    when (td) {
-                        UTC -> TimeZone.UTC
-                        LOCAL -> TimeZone.currentSystemDefault()
-                    }
-                ).toString()
+                .toLocalDateTime(td.tz)
+                .toString()
 
             "${matchResult.value}\t/* $f */"
         }
