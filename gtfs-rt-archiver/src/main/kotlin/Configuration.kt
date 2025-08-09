@@ -38,7 +38,8 @@ internal data class Feed(
     val basicAuthCredentials: BasicAuthCredential?,
     val ignoreTLSErrors: Boolean = false,
     val queryParameters: Map<String, String> = emptyMap(),
-    val extensions: Set<GtfsRealtimeExtension> = emptySet()
+    val extensions: Set<GtfsRealtimeExtension> = emptySet(),
+    val parsePartial: Boolean = false
 )
 
 internal data class BasicAuthCredential(val username: String, val password: Masked)

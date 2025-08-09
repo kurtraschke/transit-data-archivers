@@ -15,7 +15,9 @@ import com.google.common.cache.CacheLoader
 import com.google.common.collect.ImmutableListMultimap
 import com.google.common.net.HttpHeaders.*
 import com.google.protobuf.ExtensionRegistry
+import com.google.protobuf.ExtensionRegistryLite
 import com.google.protobuf.InvalidProtocolBufferException
+import com.google.protobuf.Parser
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig
 import com.hubspot.jackson.datatype.protobuf.ProtobufModule
@@ -264,7 +266,13 @@ internal class FeedArchiveJob : Job {
 
                         if (fc.status == SUCCESS) {
                             try {
-                                val fm = FeedMessage.parseFrom(responseBodyBytes, registryCache.get(feed.extensions))
+                                val parseFunction: (Parser<FeedMessage>, ByteArray, ExtensionRegistryLite) -> FeedMessage = if (feed.parsePartial) {
+                                    Parser<FeedMessage>::parsePartialFrom
+                                } else {
+                                    Parser<FeedMessage>::parseFrom
+                                }
+
+                                val fm = parseFunction(FeedMessage.parser(), responseBodyBytes, registryCache.get(feed.extensions))
 
                                 fc.headerTimestamp = Instant.fromEpochSeconds(fm.header.timestamp)
                                 fc.responseContents = fm
