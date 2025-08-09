@@ -20,6 +20,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import java.nio.file.Path
 import kotlin.io.path.writeText
+import kotlin.reflect.jvm.javaMethod
 
 @Testcontainers
 @WireMockTest(proxyMode = true)
@@ -41,7 +42,7 @@ class ArchiverIT {
         variables.set("config.override.database.username", chContainer.username)
         variables.set("config.override.database.password", chContainer.password)
 
-        val cmd = CommandLine(ArchiverCli::class.java)
+        val cmd = CommandLine(::runArchiver.javaMethod)
 
         val exitCode = cmd.execute("--one-shot", testConfigFile.toAbsolutePath().toString())
 

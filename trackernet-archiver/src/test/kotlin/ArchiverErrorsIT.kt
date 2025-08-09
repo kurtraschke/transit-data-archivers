@@ -8,6 +8,7 @@ import picocli.CommandLine
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.writeText
+import kotlin.reflect.jvm.javaMethod
 
 class ArchiverErrorsIT {
     @Test
@@ -17,7 +18,7 @@ class ArchiverErrorsIT {
 
         testConfigFile.writeText(TEST_BAD_CONFIGURATION_YAML)
 
-        val cmd = CommandLine(ArchiverCli::class.java)
+        val cmd = CommandLine(::runArchiver.javaMethod)
 
         val exitCode = cmd.execute("--one-shot", testConfigFile.toAbsolutePath().toString())
 
@@ -25,8 +26,9 @@ class ArchiverErrorsIT {
     }
 }
 
+@Suppress("HttpUrlsUsage")
 const val TEST_BAD_CONFIGURATION_YAML = """
-baseUrl: http://api.tfl.gov.uk/TrackerNet # Dagger will throw an error here because the base URL does not end in a trailing slash
+baseUrl: http://api.tfl.gov.uk/TrackerNet # Retrofit will throw an error here because the base URL does not end in a trailing slash
 
 appKey: 'foo'
 

@@ -15,6 +15,7 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectory
 import kotlin.io.path.extension
 import kotlin.io.path.writeText
+import kotlin.reflect.jvm.javaMethod
 
 @WireMockTest(proxyMode = true)
 @ExtendWith(SystemStubsExtension::class)
@@ -38,7 +39,7 @@ class ArchiverFallbackIT {
         variables.set("config.override.database.url", clickhouseUrl)
         variables.set("config.override.fallback.basePath", fallbackPath.toAbsolutePath().toString())
 
-        val cmd = CommandLine(ArchiverCli::class.java)
+        val cmd = CommandLine(::runArchiver.javaMethod)
 
         val exitCode = cmd.execute("--one-shot", testConfigFile.toAbsolutePath().toString())
 

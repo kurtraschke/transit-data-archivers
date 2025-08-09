@@ -1,11 +1,9 @@
 package systems.choochoo.transit_data_archivers.udf
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.fasterxml.jackson.annotation.JsonTypeName
 import com.fasterxml.jackson.databind.MappingIterator
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies.SnakeCaseStrategy
 import com.fasterxml.jackson.databind.annotation.JsonNaming
-import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.protobuf.ExtensionRegistry
@@ -16,10 +14,12 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import picocli.CommandLine
 import picocli.CommandLine.*
 import picocli.CommandLine.Model.CommandSpec
+import systems.choochoo.transit_data_archivers.common.utils.VersionProvider
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.io.File
 import java.io.InputStream
 import java.util.concurrent.Callable
+import kotlin.io.encoding.Base64
 import kotlin.system.exitProcess
 
 
@@ -27,10 +27,17 @@ private val om = jsonMapper {
     addModule(kotlinModule())
 }
 
-@Command(name = "clickhouse-udfs", subcommands = [Reparse::class])
+@Command(
+    name = "clickhouse-udfs",
+    description = ["ClickHouse UDF for working with archived GTFS-rt data"],
+    mixinStandardHelpOptions = true,
+    usageHelpAutoWidth = true,
+    versionProvider = VersionProvider::class,
+    subcommands = [Reparse::class]
+)
 class CliParent
 
-@Command(name = "reparse")
+@Command(name = "reparse", description = ["Reparse GTFS-rt from/to protobuf, protobuf text format, or JSON"])
 class Reparse : Callable<Int> {
     @Spec
     private lateinit var spec: CommandSpec
@@ -55,37 +62,12 @@ class Reparse : Callable<Int> {
         iter.use {
             it.forEach { row ->
                 val registry = ExtensionRegistry.newInstance()
-                (row as InputCore).enabledExtensions.forEach { extension -> extension.registerExtension(registry) }
+                row.enabledExtensions?.forEach { extension -> extension.registerExtension(registry) }
 
-                val pbMapper: JsonMapper by lazy {
-                    val config = ProtobufJacksonConfig.builder()
-                        .extensionRegistry(registry)
-                        .build()
+                val fm = row.inputFormat.parseInput(row.data, registry)
+                val outData = row.outputFormat.generateOutput(fm, registry)
 
-                    om.rebuild().addModule(ProtobufModule(config)).build()
-                }
-
-                val fm = when (row) {
-                    is Input.Json -> {
-                        pbMapper.readValue(row.data, FeedMessage::class.java)
-                    }
-
-                    is Input.PbText -> {
-                        TextFormat.parse(row.data, registry, FeedMessage::class.java)
-                    }
-
-                    is Input.Protobuf -> {
-                        FeedMessage.parseFrom(row.data, registry)
-                    }
-                }
-
-                val out = when (row.outputFormat) {
-                    Format.PROTOBUF -> Output.Protobuf(fm.toByteArray())
-                    Format.PBTEXT -> Output.PbText(fm.toString())
-                    Format.JSON -> Output.Json(pbMapper.writeValueAsString(fm))
-                }
-
-                sw.write(out)
+                sw.write(Output(outData))
             }
         }
 
@@ -95,59 +77,63 @@ class Reparse : Callable<Int> {
 
 fun main(args: Array<String>): Unit = exitProcess(CommandLine(CliParent()).execute(*args))
 
-internal interface InputCore {
-    val enabledExtensions: Set<GtfsRealtimeExtension>
-    val outputFormat: Format
-}
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "input_format")
-internal sealed class Input {
-    @JsonNaming(SnakeCaseStrategy::class)
-    @JsonTypeName("JSON")
-    data class Json(
-        val data: String,
-        override val enabledExtensions: Set<GtfsRealtimeExtension> = emptySet(),
-        override val outputFormat: Format
-    ) : Input(), InputCore
-
-    @JsonNaming(SnakeCaseStrategy::class)
-    @JsonTypeName("PBTEXT")
-    data class PbText(
-        val data: String,
-        override val enabledExtensions: Set<GtfsRealtimeExtension> = emptySet(),
-        override val outputFormat: Format
-    ) : Input(), InputCore
-
-    @JsonNaming(SnakeCaseStrategy::class)
-    @JsonTypeName("PROTOBUF")
-    data class Protobuf(
-        @Suppress("ArrayInDataClass") val data: ByteArray,
-        override val enabledExtensions: Set<GtfsRealtimeExtension> = emptySet(),
-        override val outputFormat: Format
-    ) : Input(), InputCore
-}
-
+@Suppress("unused")
 internal enum class Format {
-    PROTOBUF,
-    PBTEXT,
-    JSON
+    PROTOBUF {
+        override fun parseInput(
+            input: String,
+            registry: ExtensionRegistry
+        ): FeedMessage = FeedMessage.parseFrom(Base64.decode(input), registry)
+
+        override fun generateOutput(
+            fm: FeedMessage,
+            registry: ExtensionRegistry
+        ): String = Base64.encode(fm.toByteArray())
+    },
+    PBTEXT {
+        override fun parseInput(
+            input: String,
+            registry: ExtensionRegistry
+        ): FeedMessage = TextFormat.parse(input, registry, FeedMessage::class.java)
+
+        override fun generateOutput(
+            fm: FeedMessage,
+            registry: ExtensionRegistry
+        ): String = fm.toString()
+    },
+    JSON {
+        private fun mapper(registry: ExtensionRegistry): ObjectMapper = om.rebuild().addModule(
+            ProtobufModule(
+                ProtobufJacksonConfig.builder()
+                    .extensionRegistry(registry)
+                    .build()
+            )
+        ).build()
+
+        override fun parseInput(
+            input: String,
+            registry: ExtensionRegistry
+        ): FeedMessage = mapper(registry).readValue(input, FeedMessage::class.java)
+
+        override fun generateOutput(
+            fm: FeedMessage,
+            registry: ExtensionRegistry
+        ): String = mapper(registry).writeValueAsString(fm)
+    };
+
+    abstract fun parseInput(input: String, registry: ExtensionRegistry): FeedMessage
+    abstract fun generateOutput(fm: FeedMessage, registry: ExtensionRegistry): String
 }
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NONE)
-internal sealed class Output {
-    @JsonNaming(SnakeCaseStrategy::class)
-    data class Json(
-        val data: String
-    ) : Output()
+@JsonNaming(SnakeCaseStrategy::class)
+internal data class Input(
+    val data: String,
+    val enabledExtensions: Set<GtfsRealtimeExtension>?,
+    val inputFormat: Format,
+    val outputFormat: Format
+)
 
-    @JsonNaming(SnakeCaseStrategy::class)
-    data class PbText(
-        val data: String
-    ) : Output()
-
-
-    @JsonNaming(SnakeCaseStrategy::class)
-    data class Protobuf(
-        @Suppress("ArrayInDataClass") val data: ByteArray
-    ) : Output()
-}
+@JsonNaming(SnakeCaseStrategy::class)
+internal data class Output(
+    val data: String
+)

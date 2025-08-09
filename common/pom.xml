@@ -138,7 +138,10 @@
         <dependency>
             <groupId>com.google.dagger</groupId>
             <artifactId>dagger</artifactId>
+            <optional>true</optional>
         </dependency>
+
+        <!-- clickhouse -->
 
         <dependency>
             <groupId>com.clickhouse</groupId>
@@ -146,11 +149,15 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- quartz -->
+
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
             <optional>true</optional>
         </dependency>
+
+        <!-- hoplite -->
 
         <dependency>
             <groupId>com.sksamuel.hoplite</groupId>
@@ -162,16 +169,19 @@
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp-jvm</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp-java-net-cookiejar</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp-brotli</artifactId>
+            <optional>true</optional>
         </dependency>
 
 
@@ -186,6 +196,12 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>info.picocli</groupId>
+            <artifactId>picocli</artifactId>
             <optional>true</optional>
         </dependency>
     </dependencies>

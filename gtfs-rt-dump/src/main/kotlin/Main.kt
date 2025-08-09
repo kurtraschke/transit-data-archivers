@@ -14,140 +14,140 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import picocli.CommandLine
 import picocli.CommandLine.*
-import picocli.CommandLine.Model.CommandSpec
+import systems.choochoo.transit_data_archivers.common.utils.VersionProvider
 import systems.choochoo.transit_data_archivers.gtfsrt.dump.OutputFormat.PBTEXT
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
 import java.nio.file.Path
-import java.util.concurrent.Callable
 import kotlin.io.path.readBytes
+import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
 import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 
-@Command(name = "gtfs-rt-dump", mixinStandardHelpOptions = true)
-private class GtfsRtDump : Callable<Int> {
-
+@Command(
+    name = "gtfs-rt-dump",
+    description = ["Utility to dump GTFS-rt feeds to Protocol Buffer text format or JSON"],
+    mixinStandardHelpOptions = true,
+    usageHelpAutoWidth = true,
+    versionProvider = VersionProvider::class
+)
+internal fun dump(
     @Option(
         names = ["-O", "--output-format"],
-        paramLabel = "OUTPUT_FORMAT",
-        description = [$$"Output format to generate. Valid values: ${COMPLETION-CANDIDATES}"]
+        paramLabel = "<output format>",
+        description = [$$"Output format to generate (defaults to ${DEFAULT-VALUE}). Valid values: ${COMPLETION-CANDIDATES}"],
+        defaultValue = "PBTEXT"
     )
-    private var outputFormat: OutputFormat = PBTEXT
+    outputFormat: OutputFormat,
 
     @Option(
         names = ["-T", "--timestamp-display"],
-        paramLabel = "TIMESTAMP_FORMAT",
-        description = [$$"Output format to generate. Valid values: ${COMPLETION-CANDIDATES}"]
+        paramLabel = "<timestamp format>",
+        description = [$$"Time zone for timestamp enrichment. Valid values: ${COMPLETION-CANDIDATES}"]
     )
-    private var timestampDisplay: TimestampDisplay? = null
+    timestampDisplay: TimestampDisplay?,
 
     @Option(
         names = ["-E", "--enable-extension"],
-        paramLabel = "EXTENSION",
+        paramLabel = "<extension>",
         description = [$$"GTFS-rt extension to enable. Valid values: ${COMPLETION-CANDIDATES}"]
     )
-    private var enabledExtensions: Set<GtfsRealtimeExtension> = emptySet()
+    enabledExtensions: Set<GtfsRealtimeExtension>?,
 
     @Option(
         names = ["-P", "--partial"],
         description = ["Enable partial parsing of malformed Protocol Buffer messages"]
     )
-    private var partial: Boolean = false
+    partial: Boolean = false,
 
     @ArgGroup(exclusive = true)
-    private var inputOptions: InputOptions = InputOptions()
-
-    @Spec
-    private lateinit var spec: CommandSpec
-
-    override fun call(): Int {
-        val input = when {
-            inputOptions.inputFile != null -> inputOptions.inputFile!!.readBytes()
-            inputOptions.inputUrl != null -> inputOptions.inputUrl!!.readBytes()
-            else -> System.`in`.readBytes()
-        }
-
-        val registry = ExtensionRegistry.newInstance()
-        enabledExtensions.forEach { it.registerExtension(registry) }
-
-        val parser = FeedMessage.parser()
-
-        val parseFunction: (Parser<FeedMessage>, ByteArray, ExtensionRegistryLite) -> FeedMessage = if (partial) {
-            Parser<FeedMessage>::parsePartialFrom
-        } else {
-            Parser<FeedMessage>::parseFrom
-        }
-
-        val fm = parseFunction(parser, input, registry)
-
-        val out = when (outputFormat) {
-            OutputFormat.JSON -> {
-                jsonMapper {
-                    addModules(
-                        kotlinModule(),
-                        ProtobufModule(
-                            ProtobufJacksonConfig.builder()
-                                .extensionRegistry(registry)
-                                .build()
-                        )
-                    )
-                }
-                    .writerWithDefaultPrettyPrinter()
-                    .writeValueAsString(fm)
-            }
-
-            PBTEXT -> fm.toString()
-        }
-
-        spec.commandLine().out.println(
-            timestampDisplay?.let {
-                enrichTimestamps(out, it)
-            } ?: out
-        )
-
-        return ExitCode.OK
+    inputOptions: InputOptions?,
+): Int {
+    val input = when {
+        inputOptions?.inputFile != null -> inputOptions.inputFile.readBytes()
+        inputOptions?.inputUrl != null -> inputOptions.inputUrl.readBytes()
+        else -> System.`in`.readBytes()
     }
+
+    val registry = ExtensionRegistry.newInstance()
+    enabledExtensions?.forEach { it.registerExtension(registry) }
+
+    val parser = FeedMessage.parser()
+
+    val parseFunction: (Parser<FeedMessage>, ByteArray, ExtensionRegistryLite) -> FeedMessage = if (partial) {
+        Parser<FeedMessage>::parsePartialFrom
+    } else {
+        Parser<FeedMessage>::parseFrom
+    }
+
+    val fm = parseFunction(parser, input, registry)
+
+    val out = when (outputFormat) {
+        OutputFormat.JSON -> {
+            jsonMapper {
+                addModules(
+                    kotlinModule(),
+                    ProtobufModule(
+                        ProtobufJacksonConfig.builder()
+                            .extensionRegistry(registry)
+                            .build()
+                    )
+                )
+            }
+                .writerWithDefaultPrettyPrinter()
+                .writeValueAsString(fm)
+        }
+
+        PBTEXT -> fm.toString()
+    }
+
+    println(timestampDisplay?.enrichTimestamps(out) ?: out)
+
+    return ExitCode.OK
 }
 
-fun main(args: Array<String>): Unit =
-    exitProcess(CommandLine(GtfsRtDump()).setCaseInsensitiveEnumValuesAllowed(true).execute(*args))
 
-private enum class OutputFormat {
+fun main(args: Array<String>): Unit =
+    exitProcess(CommandLine(::dump.javaMethod).setCaseInsensitiveEnumValuesAllowed(true).execute(*args))
+
+internal enum class OutputFormat {
     JSON,
     PBTEXT
 }
 
 @Suppress("unused")
-private enum class TimestampDisplay(val tz: TimeZone) {
+internal enum class TimestampDisplay(private val tz: TimeZone) {
     LOCAL(TimeZone.currentSystemDefault()),
-    UTC(TimeZone.UTC),
-}
+    UTC(TimeZone.UTC);
 
-private class InputOptions {
-    @Option(names = ["-F", "--file"], paramLabel = "FILE", description = ["Path to GTFS-rt file to read."])
-    val inputFile: Path? = null
+    fun enrichTimestamps(out: String): String {
+        return TIMESTAMP_PATTERN.replace(out) { matchResult ->
+            val (m) = matchResult.destructured
 
-    @Option(names = ["-U", "--url"], paramLabel = "URL", description = ["URL of GTFS-rt feed to fetch."])
-    val inputUrl: URL? = null
-}
+            if (m == "" || m == "0") {
+                matchResult.value
+            } else {
+                val f = Instant
+                    .fromEpochSeconds(m.toLong())
+                    .toLocalDateTime(this.tz)
+                    .toString()
 
-private val TIMESTAMP_PATTERN = Regex(""""?(?:start|end|time(?:stamp)?|(?:updated|created)_at)"? ?: (\d+)""")
-
-private fun enrichTimestamps(out: String, td: TimestampDisplay): String {
-    return TIMESTAMP_PATTERN.replace(out) { matchResult ->
-        val (m) = matchResult.destructured
-
-        if (m == "" || m == "0") {
-            matchResult.value
-        } else {
-            val f = Instant
-                .fromEpochSeconds(m.toLong())
-                .toLocalDateTime(td.tz)
-                .toString()
-
-            "${matchResult.value}\t/* $f */"
+                "${matchResult.value}\t/* $f */"
+            }
         }
     }
+
+    companion object {
+        private val TIMESTAMP_PATTERN = Regex(""""?(?:start|end|time(?:stamp)?|(?:updated|created)_at)"? ?: (\d+)""")
+    }
+}
+
+internal class InputOptions {
+    @Option(names = ["-F", "--file"], paramLabel = "<file>", description = ["Path to GTFS-rt file to read."])
+    val inputFile: Path? = null
+
+    @Option(names = ["-U", "--url"], paramLabel = "<url>", description = ["URL of GTFS-rt feed to fetch."])
+    val inputUrl: URL? = null
 }
