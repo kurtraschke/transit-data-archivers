@@ -18,6 +18,7 @@
         <module>trackernet-api</module>
         <module>trackernet-archiver</module>
         <module>gtfs-rt-dump</module>
+        <module>njt-api-proxy</module>
     </modules>
 
     <name>transit-data-archivers</name>
@@ -565,10 +566,14 @@
                 <artifactId>retrofit</artifactId>
                 <version>${retrofit.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.squareup.retrofit2</groupId>
                 <artifactId>converter-jaxb3</artifactId>
+                <version>${retrofit.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>converter-jackson</artifactId>
                 <version>${retrofit.version}</version>
             </dependency>
 
@@ -609,6 +614,18 @@
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
                 <version>1.5.7-4</version>
+            </dependency>
+
+            <!-- javalin -->
+            <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin</artifactId>
+                <version>6.7.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.aayushatharva.brotli4j</groupId>
+                <artifactId>brotli4j</artifactId>
+                <version>1.18.0</version>
             </dependency>
 
             <!-- okhttp3 -->
