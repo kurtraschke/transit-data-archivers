@@ -2,6 +2,7 @@
 
 package systems.choochoo.transit_data_archivers.trackernet.jobs
 
+import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
 import com.clickhouse.client.api.insert.InsertSettings
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
@@ -17,15 +18,13 @@ import org.quartz.DisallowConcurrentExecution
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.quartz.JobExecutionException
+import systems.choochoo.transit_data_archivers.common.utils.FallbackWriter
 import systems.choochoo.transit_data_archivers.trackernet.model.PredictionDetailFetchResult
 import systems.choochoo.transit_data_archivers.trackernet.model.PredictionSummaryFetchResult
 import systems.choochoo.transit_data_archivers.trackernet.services.TrackernetService
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
-import java.util.concurrent.CompletableFuture
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
@@ -50,6 +49,9 @@ internal class LineArchiveJob : Job {
 
     @Inject
     lateinit var client: Client
+
+    @Inject
+    lateinit var fallbackWriter: FallbackWriter
 
     lateinit var lineCode: String
     lateinit var excludedStations: List<String>
@@ -129,54 +131,65 @@ internal class LineArchiveJob : Job {
         st.stop()
         log.trace { "Fetch complete for $lineCode; took $st" }
 
-        run {
-            val os = ByteArrayOutputStream()
+        val summaryBytes = w.writeValueAsBytes(psfr)
 
-            os.use {
-                w.writeValue(it, psfr)
+        try {
+            val response = ByteArrayInputStream(summaryBytes).use {
+                client.insert(
+                    "prediction_summary",
+                    it,
+                    JSONEachRow,
+                    settings
+                ).get()
             }
-
-            val ins = ByteArrayInputStream(os.toByteArray())
-
-            val response =
-                ins.use {
-                    client.insert(
-                        "prediction_summary",
-                        it,
-                        JSONEachRow,
-                        settings
-                    ).get()
-                }
 
             log.trace { "Inserted ${response.writtenRows} summary rows" }
+        } catch (e: ClickHouseException) {
+            log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
+
+            fallbackWriter.write(
+                linkedMapOf(
+                    "observation_type" to "summary",
+                    "line_code" to lineCode
+                ),
+                fetchTime,
+                summaryBytes
+            )
         }
 
-        run {
-            val ins = PipedInputStream()
-            val os = PipedOutputStream(ins)
-
-            val p = CompletableFuture.runAsync {
-                os.use {
-                    val sw = w.withRootValueSeparator("\n").writeValues(it)
-                    sw.use {
-                        predictionDetails.forEach { predictionDetail -> it.write(predictionDetail) }
-                    }
+        val detailsBytes = ByteArrayOutputStream()
+            .apply {
+                this.use { os ->
+                    w.withRootValueSeparator("\n")
+                        .writeValues(os).use {
+                            predictionDetails.forEach { predictionDetail -> it.write(predictionDetail) }
+                        }
                 }
             }
+            .toByteArray()
 
-            val f = ins.use {
+        try {
+            val response = ByteArrayInputStream(detailsBytes).use {
                 client.insert(
                     "prediction_details",
                     it,
                     JSONEachRow,
                     settings
                 )
-            }
+            }.get()
 
-            CompletableFuture.allOf(p, f).join()
+            log.trace { "Inserted ${response.writtenRows} detail rows" }
+        } catch (e: ClickHouseException) {
+            log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
-            log.trace { "Inserted ${f.get().writtenRows} detail rows" }
+            fallbackWriter.write(
+                linkedMapOf(
+                    "observation_type" to "details",
+                    "line_code" to lineCode
+                ),
+                fetchTime,
+                detailsBytes
+            )
         }
-
     }
 }

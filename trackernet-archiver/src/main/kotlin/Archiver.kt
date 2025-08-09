@@ -19,6 +19,7 @@ import systems.choochoo.transit_data_archivers.common.listeners.SchedulerShutdow
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.common.modules.ClickHouseClientModule
 import systems.choochoo.transit_data_archivers.common.modules.CookieHandlerModule
+import systems.choochoo.transit_data_archivers.common.modules.FallbackWriterModule
 import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.common.modules.QuartzSchedulerModule
 import systems.choochoo.transit_data_archivers.common.utils.randomDuration
@@ -38,14 +39,15 @@ private const val FETCH_GROUP = "line-fetch"
 
 @Component(
     modules = [
-        ConfigurationModule::class,
         ApplicationVersionModule::class,
         ClickHouseClientModule::class,
-        DaggerJobFactoryModule::class,
-        QuartzSchedulerModule::class,
+        ConfigurationModule::class,
         CookieHandlerModule::class,
+        DaggerJobFactoryModule::class,
+        FallbackWriterModule::class,
         OkHttpClientModule::class,
-        TrackernetApiClientModule::class
+        QuartzSchedulerModule::class,
+        TrackernetApiClientModule::class,
     ]
 )
 @Singleton
@@ -69,7 +71,7 @@ internal interface ArchiverFactory {
 internal class Archiver @Inject constructor(
     configuration: Configuration,
     @Named("oneShot") oneShot: Boolean,
-    val scheduler: Scheduler
+    private val scheduler: Scheduler
 ) {
     init {
         val jobs = configuration.lines.map { lc ->
