@@ -9,8 +9,8 @@ import systems.choochoo.transit_data_archivers.common.configuration.loadApplicat
 @Module
 class ApplicationVersionModule {
     companion object {
-        @Singleton
         @Provides
+        @Singleton
         fun providesApplicationVersion(): ApplicationVersion = loadApplicationVersion()
     }
 }

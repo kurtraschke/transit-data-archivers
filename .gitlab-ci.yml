@@ -74,7 +74,7 @@ deploy:jdk21:
       if [ -z ${IMAGE_TAG+x} ]; then
         if [ "$CI_COMMIT_REF_NAME" = $CI_DEFAULT_BRANCH ]; then
             VERSION="latest"
-        elif [ -n "$CI_COMMIT_TAG" ];then
+        elif [ -n "$CI_COMMIT_TAG" ]; then
             NOSLASH=$(echo "$CI_COMMIT_TAG" | tr -s / - )
             SANITIZED="${NOSLASH//[^a-zA-Z0-9.-]/}"
             VERSION="$SANITIZED"
@@ -82,7 +82,7 @@ deploy:jdk21:
             NOSLASH=$(echo "$CI_COMMIT_REF_NAME" | tr -s / - )
             SANITIZED="${NOSLASH//[^a-zA-Z0-9-]/}"
             VERSION="branch-$SANITIZED"
-          fi
+        fi
         export IMAGE_TAG=$VERSION
       fi
     - echo $IMAGE_TAG
