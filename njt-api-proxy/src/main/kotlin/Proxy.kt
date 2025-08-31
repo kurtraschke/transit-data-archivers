@@ -11,19 +11,29 @@ import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.Javalin
-import io.javalin.http.*
+import io.javalin.http.BadGatewayResponse
+import io.javalin.http.ContentType
+import io.javalin.http.pathParamAsClass
+import io.javalin.http.queryParamAsClass
 import io.javalin.json.JavalinJackson
+import io.javalin.micrometer.MicrometerPlugin
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import io.prometheus.metrics.exporter.servlet.jakarta.PrometheusMetricsServlet
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
+import org.eclipse.jetty.servlet.ServletHolder
+import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.common.modules.CookieHandlerModule
 import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.njt.model.*
 import systems.choochoo.transit_data_archivers.njt.model.OutputFormat.*
 import systems.choochoo.transit_data_archivers.njt.modules.ConfigurationModule
+import systems.choochoo.transit_data_archivers.njt.modules.MicrometerModule
 import systems.choochoo.transit_data_archivers.njt.modules.ObjectMapperModule
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
+import systems.choochoo.transit_data_archivers.njt.utils.contentType
 import systems.choochoo.transit_data_archivers.njt.utils.filterInvalidEntities
 import java.io.IOException
 import java.nio.file.Path
@@ -36,6 +46,7 @@ private val log = KotlinLogging.logger {}
         ApplicationVersionModule::class,
         ConfigurationModule::class,
         CookieHandlerModule::class,
+        MicrometerModule::class,
         ObjectMapperModule::class,
         OkHttpClientModule::class,
     ]
@@ -43,6 +54,8 @@ private val log = KotlinLogging.logger {}
 @Singleton
 internal interface ProxyFactory {
     fun proxy(): Proxy
+    fun appVersion(): ApplicationVersion
+    fun prometheusMeterRegistry(): PrometheusMeterRegistry
 
     @Component.Builder
     interface Builder {
@@ -71,7 +84,7 @@ internal interface ProxyFactory {
     }
 }
 
-const val INVALID_TOKEN_ERROR = "Invalid token."
+private const val INVALID_TOKEN_ERROR = "Invalid token."
 
 internal class Proxy @Inject constructor(
     @param:Named("host") private val host: String,
@@ -80,6 +93,7 @@ internal class Proxy @Inject constructor(
     ptc: PersistentTokenCache,
     private val om: ObjectMapper,
     shutdownLatch: CountDownLatch,
+    prometheusMeterRegistry: PrometheusMeterRegistry,
 ) {
     val app: Javalin = Javalin
         .create { config ->
@@ -92,6 +106,16 @@ internal class Proxy @Inject constructor(
             config.validation.register(OutputFormat::class.java) { OutputFormat.valueOf(it.uppercase()) }
 
             config.jsonMapper(JavalinJackson(om))
+
+            config.registerPlugin(MicrometerPlugin { micrometerPluginConfig ->
+                micrometerPluginConfig.registry = prometheusMeterRegistry
+            })
+
+            config.jetty.modifyServletContextHandler { handler ->
+                val prometheusMetricsServlet = ServletHolder(PrometheusMetricsServlet(prometheusMeterRegistry.prometheusRegistry))
+
+                handler.addServlet(prometheusMetricsServlet, "/metrics")
+            }
         }
         .events { events ->
             events.serverStopped {
@@ -105,6 +129,7 @@ internal class Proxy @Inject constructor(
             val token = ptc.get(TokenKey(environment, mode))
 
             ctx.contentType(ContentType.TEXT_PLAIN)
+            //ctx.header(Header.LAST_MODIFIED, token.whenObtained)
             ctx.result(token.token)
         }
         .get("/{environment}/{mode}/proxy/gtfs") { ctx ->
@@ -208,8 +233,4 @@ internal class Proxy @Inject constructor(
         app.stop()
     }
 
-}
-
-fun Context.contentType(mt: MediaType): Context {
-    return this.contentType(mt.toString())
 }

@@ -1,9 +1,12 @@
 package systems.choochoo.transit_data_archivers.common.modules
 
 import com.google.common.net.HttpHeaders.USER_AGENT
+import dagger.BindsOptionalOf
 import dagger.Module
 import dagger.Provides
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.micrometer.core.instrument.MeterRegistry
+import io.micrometer.core.instrument.binder.okhttp3.OkHttpMetricsEventListener
 import jakarta.inject.Singleton
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
@@ -14,11 +17,16 @@ import systems.choochoo.transit_data_archivers.common.configuration.HasCallTimeo
 import systems.choochoo.transit_data_archivers.common.configuration.HasOperatorContact
 import systems.choochoo.transit_data_archivers.common.utils.constructUserAgentString
 import java.net.CookieHandler
+import java.util.*
+
 
 private val log = KotlinLogging.logger {}
 
 @Module
-class OkHttpClientModule() {
+abstract class OkHttpClientModule() {
+    @BindsOptionalOf
+    abstract fun bindOptionalMeterRegistry(): MeterRegistry
+
     companion object {
         @Provides
         @Singleton
@@ -26,7 +34,8 @@ class OkHttpClientModule() {
             hoc: HasOperatorContact,
             hct: HasCallTimeout,
             appVersion: ApplicationVersion,
-            cookieHandler: CookieHandler
+            cookieHandler: CookieHandler,
+            meterRegistry: Optional<MeterRegistry>
         ): OkHttpClient {
             val jar = JavaNetCookieJar(cookieHandler)
 
@@ -38,6 +47,15 @@ class OkHttpClientModule() {
                 .cookieJar(jar)
                 .callTimeout(hct.callTimeout)
                 .addInterceptor(BrotliInterceptor)
+                .apply {
+                    if (meterRegistry.isPresent) {
+                        eventListener(
+                            OkHttpMetricsEventListener.builder(meterRegistry.get(), "okhttp.requests")
+                                .uriMapper { req -> req.url.redact() }
+                                .build()
+                        )
+                    }
+                }
                 .addInterceptor { chain ->
                     chain.proceed(
                         chain.request()

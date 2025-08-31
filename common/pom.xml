@@ -199,10 +199,18 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- picocli -->
+
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
             <optional>true</optional>
+        </dependency>
+
+        <!-- micrometer -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
         </dependency>
     </dependencies>
 

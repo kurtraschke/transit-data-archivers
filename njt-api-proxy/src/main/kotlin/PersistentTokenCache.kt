@@ -11,14 +11,15 @@ import com.google.common.net.HttpHeaders
 import io.javalin.http.BadGatewayResponse
 import jakarta.inject.Inject
 import jakarta.inject.Named
+import jakarta.inject.Singleton
 import systems.choochoo.transit_data_archivers.njt.model.Token
 import systems.choochoo.transit_data_archivers.njt.model.TokenKey
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
 import java.io.IOException
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.ReadWriteLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
@@ -32,40 +33,28 @@ import kotlin.time.toKotlinInstant
 
 private val TOKEN_LIFETIME = 24.hours
 
+@Singleton
 internal class PersistentTokenCache @Inject constructor(
-    @Named("dataPath") dataPath: Path,
     @param:Named("username") private val username: String,
     @param:Named("password") private val password: String,
     private val s: MetaRealtimeService,
-    om: ObjectMapper
+    private val ts: TokenStore
 ) {
-    private val ts = TokenStore(dataPath, om)
+    private val locks = ConcurrentHashMap<TokenKey, Lock>()
 
-    private val locks = ConcurrentHashMap<TokenKey, ReadWriteLock>()
-
-    private fun lock(k: TokenKey): ReadWriteLock {
-        return locks.computeIfAbsent(k) { k -> ReentrantReadWriteLock() }
+    private fun lock(k: TokenKey): Lock {
+        return locks.computeIfAbsent(k) { _ -> ReentrantLock() }
     }
 
     fun get(k: TokenKey): Token {
         val l = lock(k)
 
-        l.readLock().lock()
-
-        if (!existsAndIsValid(k)) {
-            l.readLock().unlock()
-            l.writeLock().withLock {
-                if (!existsAndIsValid(k)) {
-                    ts.put(k, getUncached(k))
-                }
-                l.readLock().lock()
+        return l.withLock {
+            if (!existsAndIsValid(k)) {
+                ts.put(k, getUncached(k))
             }
-        }
 
-        return try {
             ts.get(k)!!
-        } finally {
-            l.readLock().unlock()
         }
     }
 
@@ -88,7 +77,7 @@ internal class PersistentTokenCache @Inject constructor(
     }
 
     fun existsAndIsValid(k: TokenKey): Boolean {
-        return lock(k).readLock().withLock {
+        return lock(k).withLock {
             val t = ts.get(k)
 
             if (t == null) {
@@ -100,14 +89,18 @@ internal class PersistentTokenCache @Inject constructor(
     }
 
     fun invalidate(k: TokenKey) {
-        lock(k).writeLock().withLock {
+        lock(k).withLock {
             ts.delete(k)
         }
     }
 
 }
 
-private class TokenStore(private val baseDir: Path, private val om: ObjectMapper) {
+@Singleton
+internal class TokenStore @Inject constructor(
+    @param:Named("dataPath") private val baseDir: Path,
+    private val om: ObjectMapper
+) {
     init {
         require(baseDir.isDirectory() && baseDir.isReadable() && baseDir.isWritable()) { "$baseDir must be a directory that is readable and writable" }
     }

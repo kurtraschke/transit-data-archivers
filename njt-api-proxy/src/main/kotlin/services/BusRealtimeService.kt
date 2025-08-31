@@ -1,6 +1,6 @@
 package systems.choochoo.transit_data_archivers.njt.services
 
-import com.google.transit.realtime.GtfsRealtime
+import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Field
@@ -22,13 +22,13 @@ internal interface BusRealtimeService : RealtimeService {
 
     @FormUrlEncoded
     @POST("api/GTFS/getAlerts")
-    override fun getAlerts(@Field("token") token: String): Call<GtfsRealtime.FeedMessage>
+    override fun getAlerts(@Field("token") token: String): Call<FeedMessage>
 
     @FormUrlEncoded
     @POST("api/GTFS/getTripUpdates")
-    override fun getTripUpdates(@Field("token") token: String): Call<GtfsRealtime.FeedMessage>
+    override fun getTripUpdates(@Field("token") token: String): Call<FeedMessage>
 
     @FormUrlEncoded
     @POST("api/GTFS/getVehiclePositions")
-    override fun getVehiclePositions(@Field("token") token: String): Call<GtfsRealtime.FeedMessage>
+    override fun getVehiclePositions(@Field("token") token: String): Call<FeedMessage>
 }
