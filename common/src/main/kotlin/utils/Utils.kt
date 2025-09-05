@@ -18,7 +18,7 @@ fun constructUserAgentString(
     val userAgentString =
         "${applicationVersion.groupId}:${applicationVersion.artifactId}/${applicationVersion.version}" +
                 " (${applicationVersion.commitId}; ${applicationVersion.branch})" +
-                (okHttpVersion?.let { " (okhttp/${it})" } ?: "") +
+                (okHttpVersion?.let { " (okhttp/$it)" } ?: "") +
                 (operatorContact?.let { " ($it)" } ?: "")
 
     return userAgentString
