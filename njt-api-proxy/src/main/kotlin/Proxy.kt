@@ -26,11 +26,11 @@ import org.eclipse.jetty.servlet.ServletHolder
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.common.modules.CookieHandlerModule
+import systems.choochoo.transit_data_archivers.common.modules.MicrometerModule
 import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
 import systems.choochoo.transit_data_archivers.njt.model.*
 import systems.choochoo.transit_data_archivers.njt.model.OutputFormat.*
 import systems.choochoo.transit_data_archivers.njt.modules.ConfigurationModule
-import systems.choochoo.transit_data_archivers.njt.modules.MicrometerModule
 import systems.choochoo.transit_data_archivers.njt.modules.ObjectMapperModule
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
 import systems.choochoo.transit_data_archivers.njt.utils.contentType
@@ -112,7 +112,8 @@ internal class Proxy @Inject constructor(
             })
 
             config.jetty.modifyServletContextHandler { handler ->
-                val prometheusMetricsServlet = ServletHolder(PrometheusMetricsServlet(prometheusMeterRegistry.prometheusRegistry))
+                val prometheusMetricsServlet =
+                    ServletHolder(PrometheusMetricsServlet(prometheusMeterRegistry.prometheusRegistry))
 
                 handler.addServlet(prometheusMetricsServlet, "/metrics")
             }

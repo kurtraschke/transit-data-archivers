@@ -5,6 +5,7 @@ package systems.choochoo.transit_data_archivers.gtfsrt
 import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
@@ -18,18 +19,13 @@ import systems.choochoo.transit_data_archivers.common.configuration.ApplicationV
 import systems.choochoo.transit_data_archivers.common.listeners.OneShotJobCompletionListener
 import systems.choochoo.transit_data_archivers.common.listeners.SchedulerErrorListener
 import systems.choochoo.transit_data_archivers.common.listeners.SchedulerShutdownListener
-import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
-import systems.choochoo.transit_data_archivers.common.modules.ClickHouseClientModule
-import systems.choochoo.transit_data_archivers.common.modules.CookieHandlerModule
-import systems.choochoo.transit_data_archivers.common.modules.FallbackWriterModule
-import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
-import systems.choochoo.transit_data_archivers.common.modules.QuartzSchedulerModule
+import systems.choochoo.transit_data_archivers.common.modules.*
 import systems.choochoo.transit_data_archivers.common.utils.randomDuration
 import systems.choochoo.transit_data_archivers.gtfsrt.jobs.FeedArchiveJob
 import systems.choochoo.transit_data_archivers.gtfsrt.listeners.JobFailureListenerFactory
-import systems.choochoo.transit_data_archivers.gtfsrt.modules.DaggerJobFactoryModule
 import systems.choochoo.transit_data_archivers.gtfsrt.modules.ConfigurationModule
-import java.util.Date
+import systems.choochoo.transit_data_archivers.gtfsrt.modules.DaggerJobFactoryModule
+import java.util.*
 import kotlin.time.Clock
 import kotlin.time.DurationUnit.*
 import kotlin.time.ExperimentalTime
@@ -45,6 +41,7 @@ private val log = KotlinLogging.logger {}
         CookieHandlerModule::class,
         DaggerJobFactoryModule::class,
         FallbackWriterModule::class,
+        MicrometerModule::class,
         OkHttpClientModule::class,
         QuartzSchedulerModule::class,
     ]
@@ -55,6 +52,7 @@ internal interface ArchiverFactory {
     fun appVersion(): ApplicationVersion
     fun schedulerErrorListener(): SchedulerErrorListener
     fun schedulerShutdownListener(): SchedulerShutdownListener
+    fun prometheusMeterRegistry(): PrometheusMeterRegistry
 
     @Component.Builder
     interface Builder {

@@ -5,27 +5,14 @@ package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
-import com.fasterxml.jackson.datatype.guava.GuavaModule
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.common.base.Stopwatch
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
 import com.google.common.collect.ImmutableListMultimap
 import com.google.common.net.HttpHeaders.*
-import com.google.protobuf.ExtensionRegistry
 import com.google.protobuf.ExtensionRegistryLite
 import com.google.protobuf.InvalidProtocolBufferException
 import com.google.protobuf.Parser
 import com.google.transit.realtime.GtfsRealtime.FeedMessage
-import com.hubspot.jackson.datatype.protobuf.ProtobufJacksonConfig
-import com.hubspot.jackson.datatype.protobuf.ProtobufModule
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.prometheus.metrics.core.metrics.Counter
-import io.prometheus.metrics.core.metrics.Gauge
-import io.prometheus.metrics.core.metrics.Histogram
-import io.prometheus.metrics.model.snapshots.Unit
 import jakarta.inject.Inject
 import okhttp3.Authenticator
 import okhttp3.Credentials
@@ -38,17 +25,15 @@ import org.slf4j.MDC
 import systems.choochoo.transit_data_archivers.common.utils.FallbackWriter
 import systems.choochoo.transit_data_archivers.common.utils.ignoreAllTLSErrors
 import systems.choochoo.transit_data_archivers.gtfsrt.Feed
-import systems.choochoo.transit_data_archivers.gtfsrt.cacheMetrics
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FeedContents
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FetchStatus.*
-import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
+import systems.choochoo.transit_data_archivers.gtfsrt.utils.Metrics
+import systems.choochoo.transit_data_archivers.gtfsrt.utils.ObjectMapperCache
 import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
-import kotlin.math.pow
-import kotlin.math.roundToLong
 import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
 import java.lang.Boolean as jBoolean
@@ -58,91 +43,6 @@ const val LAST_LAST_MODIFIED = "lastLastModified"
 const val LAST_HEADER_TIMESTAMP = "lastHeaderTimestamp"
 
 private val STATUSES_TO_PERSIST: EnumSet<FetchStatus> = EnumSet.of(SUCCESS, ERROR)
-
-private val fetchCount = Counter.builder()
-    .name("fetch_event_total")
-    .help("number of fetch events")
-    .labelNames("producer", "feed", "fetch_status")
-    .register()
-
-private val uncaughtErrorCount = Counter.builder()
-    .name("uncaught_exception_total")
-    .help("number of uncaught exceptions")
-    .labelNames("producer", "feed")
-    .register()
-
-private val fallbackArchiveCount = Counter.builder()
-    .name("fallback_archive_count")
-    .help("number of fetches written to fallback destination")
-    .labelNames("producer", "feed")
-    .register()
-
-private val lastFetchTime = Gauge.builder()
-    .name("last_fetch_time")
-    .help("last fetch time as epoch timestamp")
-    .labelNames("producer", "feed", "fetch_status")
-    .unit(Unit.SECONDS)
-    .register()
-
-private val totalFetchDuration = Histogram.builder()
-    .name("overall_fetch_duration")
-    .help("overall fetch duration in seconds")
-    .labelNames("producer", "feed", "fetch_status")
-    .unit(Unit.SECONDS)
-    .register()
-
-private val serverResponseDuration = Histogram.builder()
-    .name("server_response_duration")
-    .help("time for remote server to respond in seconds")
-    .labelNames("producer", "feed", "fetch_status")
-    .unit(Unit.SECONDS)
-    .register()
-
-private val responseSizeBytes = Histogram.builder()
-    .name("response_size_bytes")
-    .help("uncompressed size of response")
-    .labelNames("producer", "feed", "fetch_status")
-    .unit(Unit.BYTES)
-    .register()
-
-// We want to set some limit on the size of these caches, to prevent unbounded expansion in the event of a mishap.
-// But rather than setting an arbitrary limit, we want the number to be grounded in some basis.
-// The number of possible combinations of extensions is the cardinality of the powerset of the set of extensions,
-// or 2^n, where n is the number of extensions.
-
-private val CACHE_SIZE = 2.0.pow(GtfsRealtimeExtension.entries.size.toDouble()).roundToLong()
-
-private val registryCache = CacheBuilder.newBuilder()
-    .maximumSize(CACHE_SIZE)
-    .recordStats()
-    .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
-        val registry = ExtensionRegistry.newInstance()
-        key.forEach { it.registerExtension(registry) }
-        registry
-    })
-    .apply { cacheMetrics.addCache("registryCache", this) }
-
-private val objectMapperCache = CacheBuilder.newBuilder()
-    .maximumSize(CACHE_SIZE)
-    .recordStats()
-    .build(CacheLoader.from { key: Set<GtfsRealtimeExtension> ->
-        val registry = registryCache.get(key)
-
-        val config = ProtobufJacksonConfig.builder()
-            .extensionRegistry(registry)
-            .build()
-
-        jsonMapper {
-            addModules(
-                kotlinModule(),
-                GuavaModule(),
-                JavaTimeModule(),
-                ProtobufModule(config)
-            )
-        }
-    })
-    .apply { cacheMetrics.addCache("objectMapperCache", this) }
-
 
 private val log = KotlinLogging.logger {}
 
@@ -154,10 +54,16 @@ internal class FeedArchiveJob : Job {
     lateinit var httpClient: OkHttpClient
 
     @Inject
+    lateinit var objectMapperCache: ObjectMapperCache
+
+    @Inject
     lateinit var clickHouseClient: Client
 
     @Inject
     lateinit var fallbackWriter: FallbackWriter
+
+    @Inject
+    lateinit var metrics: Metrics
 
     lateinit var feed: Feed
 
@@ -272,7 +178,7 @@ internal class FeedArchiveJob : Job {
                                     Parser<FeedMessage>::parseFrom
                                 }
 
-                                val fm = parseFunction(FeedMessage.parser(), responseBodyBytes, registryCache.get(feed.extensions))
+                                val fm = parseFunction(FeedMessage.parser(), responseBodyBytes, objectMapperCache.getExtensionRegistry(feed.extensions))
 
                                 fc.headerTimestamp = Instant.fromEpochSeconds(fm.header.timestamp)
                                 fc.responseContents = fm
@@ -303,7 +209,7 @@ internal class FeedArchiveJob : Job {
             }
 
             if (STATUSES_TO_PERSIST.contains(fc.status)) {
-                val s = objectMapperCache.get(feed.extensions)
+                val s = objectMapperCache.getObjectMapper(feed.extensions)
                     .writeValueAsBytes(fc)
 
                 try {
@@ -338,7 +244,7 @@ internal class FeedArchiveJob : Job {
                 } catch (e: ClickHouseException) {
                     log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
-                    fallbackArchiveCount.labelValues(fc.producer, fc.feed).inc()
+                    metrics.fallbackArchiveCount.labelValues(fc.producer, fc.feed).inc()
 
                     fallbackWriter.write(
                         linkedMapOf("producer" to fc.producer, "feed" to fc.feed),
@@ -358,26 +264,26 @@ internal class FeedArchiveJob : Job {
             log.trace { "Fetch took $sw" }
             log.trace { fc.toString() }
 
-            fetchCount.labelValues(fc.producer, fc.feed, fc.status.toString()).inc()
-            lastFetchTime.labelValues(fc.producer, fc.feed, fc.status.toString())
+            metrics.fetchCount.labelValues(fc.producer, fc.feed, fc.status.toString()).inc()
+            metrics.lastFetchTime.labelValues(fc.producer, fc.feed, fc.status.toString())
                 .set(fc.fetchTime.epochSeconds.toDouble())
-            totalFetchDuration.labelValues(fc.producer, fc.feed, fc.status.toString())
+            metrics.totalFetchDuration.labelValues(fc.producer, fc.feed, fc.status.toString())
                 .observe(sw.elapsed().toKotlinDuration().toDouble(DurationUnit.SECONDS))
 
             fc.responseTimeMillis?.let {
-                serverResponseDuration.labelValues(fc.producer, fc.feed, fc.status.toString())
+                metrics.serverResponseDuration.labelValues(fc.producer, fc.feed, fc.status.toString())
                     .observe(it.milliseconds.toDouble(DurationUnit.SECONDS))
             }
 
             fc.responseBodyLength?.let {
-                responseSizeBytes.labelValues(fc.producer, fc.feed, fc.status.toString())
+                metrics.responseSizeBytes.labelValues(fc.producer, fc.feed, fc.status.toString())
                     .observe(it.toDouble())
             }
 
             context.result = fc
         } catch (e: Exception) {
             log.error(e) { "Uncaught exception during feed fetch" }
-            uncaughtErrorCount.labelValues(feed.producer, feed.feed).inc()
+            metrics.uncaughtErrorCount.labelValues(feed.producer, feed.feed).inc()
             throw JobExecutionException(e)
         } finally {
             MDC.clear()

@@ -18,6 +18,7 @@ import kotlin.time.Duration.Companion.seconds
 internal data class Configuration(
     override val database: DatabaseConfiguration = DatabaseConfiguration(),
     override val fallback: FallbackConfiguration = FallbackConfiguration(),
+    val metrics: MetricsConfiguration = MetricsConfiguration(),
     val fetchInterval: FetchInterval = FetchInterval(30.seconds),
     override val callTimeout: Duration = 15.seconds,
     val storeResponseBody: Boolean = false,
@@ -26,6 +27,12 @@ internal data class Configuration(
     val failureResponse: FailureResponse = FailureResponse(),
     val feeds: List<Feed>
 ) : HasDatabaseConfiguration, HasFallbackConfiguration, HasOperatorContact, HasCallTimeout
+
+internal data class MetricsConfiguration(
+    val enabled: Boolean = true,
+    val hostname: String = "localhost",
+    val port: Int = 9400,
+)
 
 internal data class Feed(
     val producer: String,

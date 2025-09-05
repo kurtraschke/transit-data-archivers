@@ -7,22 +7,25 @@ import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.ExperimentalHoplite
 import com.sksamuel.hoplite.addFileSource
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmThreadMetrics
+import io.micrometer.core.instrument.binder.system.DiskSpaceMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import io.micrometer.core.instrument.binder.system.UptimeMetrics
 import io.prometheus.metrics.core.metrics.Info
 import io.prometheus.metrics.exporter.httpserver.HTTPServer
-import io.prometheus.metrics.instrumentation.guava.CacheMetricsCollector
-import io.prometheus.metrics.instrumentation.jvm.JvmMetrics
-import io.prometheus.metrics.model.registry.PrometheusRegistry
 import picocli.CommandLine
 import picocli.CommandLine.*
 import systems.choochoo.transit_data_archivers.common.utils.VersionProvider
+import java.io.File
 import java.nio.file.Path
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
-
-val cacheMetrics = CacheMetricsCollector()
 
 private val log = KotlinLogging.logger {}
 
@@ -79,15 +82,21 @@ internal fun runArchiver(
     val shutdownListener = af.schedulerShutdownListener()
     val errorListener = af.schedulerErrorListener()
 
-    JvmMetrics.builder().register()
+    val meterRegistry = af.prometheusMeterRegistry()
 
-    PrometheusRegistry.defaultRegistry.register(cacheMetrics)
+    ClassLoaderMetrics().bindTo(meterRegistry)
+    JvmMemoryMetrics().bindTo(meterRegistry)
+    JvmGcMetrics().bindTo(meterRegistry)
+    JvmThreadMetrics().bindTo(meterRegistry)
+    UptimeMetrics().bindTo(meterRegistry)
+    ProcessorMetrics().bindTo(meterRegistry)
+    DiskSpaceMetrics(File(System.getProperty("user.dir"))).bindTo(meterRegistry)
 
     Info.builder()
         .name("gtfs_rt_archiver_info")
         .help("gtfs-rt-archiver version info")
         .labelNames("group", "artifact", "version", "branch", "commit", "buildTimestamp")
-        .register()
+        .register(meterRegistry.prometheusRegistry)
         .setLabelValues(
             appVersion.groupId,
             appVersion.artifactId,
@@ -97,9 +106,15 @@ internal fun runArchiver(
             appVersion.buildTimestamp.toKotlinInstant().epochSeconds.toString()
         )
 
-    val server = HTTPServer.builder()
-        .port(9400)
-        .buildAndStart()
+    val server = if (configuration.metrics.enabled) {
+        HTTPServer.builder()
+            .registry(meterRegistry.prometheusRegistry)
+            .hostname(configuration.metrics.hostname)
+            .port(configuration.metrics.port)
+            .buildAndStart()
+    } else {
+        null
+    }
 
     theArchiver.start()
 
@@ -108,7 +123,7 @@ internal fun runArchiver(
     }
 
     theArchiver.stop()
-    server.stop()
+    server?.stop()
 
     return if (errorListener.schedulerTerminatedWithError) {
         ExitCode.SOFTWARE

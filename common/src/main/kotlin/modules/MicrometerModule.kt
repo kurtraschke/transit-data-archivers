@@ -1,8 +1,8 @@
-package systems.choochoo.transit_data_archivers.njt.modules
+package systems.choochoo.transit_data_archivers.common.modules
 
 import dagger.Binds
-import dagger.Provides
 import dagger.Module
+import dagger.Provides
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
@@ -10,6 +10,7 @@ import jakarta.inject.Singleton
 
 @Module
 abstract class MicrometerModule {
+    @Suppress("unused")
     @Binds
     abstract fun meterRegistry(prometheusMeterRegistry: PrometheusMeterRegistry): MeterRegistry
 
