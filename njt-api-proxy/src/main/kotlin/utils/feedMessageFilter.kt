@@ -10,5 +10,5 @@ internal fun filterInvalidEntities(fm: FeedMessage) : FeedMessage {
     b.clearEntity()
     b.addAllEntity(validEntities)
 
-    return b.build()
+    return b.buildPartial()
 }

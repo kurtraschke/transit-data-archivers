@@ -1,11 +1,9 @@
+@file:OptIn(ExperimentalTime::class)
+
 package systems.choochoo.transit_data_archivers.njt
 
 
-import com.fasterxml.jackson.core.exc.StreamReadException
-import com.fasterxml.jackson.databind.DatabindException
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.RuntimeJsonMappingException
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.net.MediaType
 import dagger.BindsInstance
 import dagger.Component
@@ -13,6 +11,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.Javalin
 import io.javalin.http.BadGatewayResponse
 import io.javalin.http.ContentType
+import io.javalin.http.Header.EXPIRES
+import io.javalin.http.Header.LAST_MODIFIED
 import io.javalin.http.pathParamAsClass
 import io.javalin.http.queryParamAsClass
 import io.javalin.json.JavalinJackson
@@ -23,21 +23,23 @@ import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
 import org.eclipse.jetty.servlet.ServletHolder
+import retrofit2.HttpException
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.common.modules.CookieHandlerModule
 import systems.choochoo.transit_data_archivers.common.modules.MicrometerModule
 import systems.choochoo.transit_data_archivers.common.modules.OkHttpClientModule
+import systems.choochoo.transit_data_archivers.common.utils.toHttpDateString
 import systems.choochoo.transit_data_archivers.njt.model.*
 import systems.choochoo.transit_data_archivers.njt.model.OutputFormat.*
 import systems.choochoo.transit_data_archivers.njt.modules.ConfigurationModule
 import systems.choochoo.transit_data_archivers.njt.modules.ObjectMapperModule
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
-import systems.choochoo.transit_data_archivers.njt.utils.contentType
-import systems.choochoo.transit_data_archivers.njt.utils.filterInvalidEntities
-import java.io.IOException
+import systems.choochoo.transit_data_archivers.njt.utils.*
 import java.nio.file.Path
+import java.util.concurrent.CompletionException
 import java.util.concurrent.CountDownLatch
+import kotlin.time.ExperimentalTime
 
 private val log = KotlinLogging.logger {}
 
@@ -84,13 +86,11 @@ internal interface ProxyFactory {
     }
 }
 
-private const val INVALID_TOKEN_ERROR = "Invalid token."
-
 internal class Proxy @Inject constructor(
     @param:Named("host") private val host: String,
     @param:Named("port") private val port: Int,
     s: MetaRealtimeService,
-    ptc: PersistentTokenCache,
+    private val ptc: PersistentTokenCache,
     private val om: ObjectMapper,
     shutdownLatch: CountDownLatch,
     prometheusMeterRegistry: PrometheusMeterRegistry,
@@ -130,7 +130,8 @@ internal class Proxy @Inject constructor(
             val token = ptc.get(TokenKey(environment, mode))
 
             ctx.contentType(ContentType.TEXT_PLAIN)
-            //ctx.header(Header.LAST_MODIFIED, token.whenObtained)
+            ctx.header(LAST_MODIFIED, token.whenObtained.toHttpDateString())
+            ctx.header(EXPIRES, (token.whenObtained + TOKEN_LIFETIME).toHttpDateString())
             ctx.result(token.token)
         }
         .get("/{environment}/{mode}/proxy/gtfs") { ctx ->
@@ -139,24 +140,18 @@ internal class Proxy @Inject constructor(
 
             val token = ptc.get(TokenKey(environment, mode))
 
-            val response = s.get(environment, mode).getGTFS(token.token).execute()
+            ctx.future {
+                s.get(environment, mode).getGTFS(token.token)
+                    .thenAccept { response ->
+                        val filename = "${environment}-${mode}-GTFS.zip"
 
-            if (response.isSuccessful) {
-                val filename = "${environment}-${mode}-GTFS.zip"
-
-                ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
-                ctx.contentType(ContentType.APPLICATION_ZIP)
-                ctx.result(response.body()!!.byteStream())
-
-            } else {
-                val errorMessage = parseErrorMessage(response.errorBody()?.bytes())
-
-                if (errorMessage == "Invalid token.") {
-                    log.warn { "Invalidating token for environment $environment and mode $mode due to upstream response." }
-                    ptc.invalidate(TokenKey(environment, mode))
-                }
-
-                throw BadGatewayResponse(errorMessage ?: "")
+                        ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
+                            .contentType(ContentType.APPLICATION_ZIP)
+                            .result(response.byteStream())
+                    }
+                    .exceptionally { throwable ->
+                        handleException(throwable, environment, mode)
+                    }
             }
         }
         .get("/{environment}/{mode}/proxy/{feed}") { ctx ->
@@ -168,62 +163,66 @@ internal class Proxy @Inject constructor(
 
             val token = ptc.get(TokenKey(environment, mode))
 
-            val response = feed.requestFunction(s.get(environment, mode), token.token).execute()
+            ctx.future {
+                feed.requestFunction(s.get(environment, mode), token.token)
+                    .thenAccept { response ->
+                        val fm = response
+                            .let {
+                                if (filterInvalidEntities) {
+                                    filterInvalidEntities(it)
+                                } else {
+                                    it
+                                }
+                            }
 
-            if (response.isSuccessful && response.body() != null) {
-                val fm = response.body()!!
-                    .let {
-                        if (filterInvalidEntities) {
-                            filterInvalidEntities(it)
-                        } else {
-                            it
+                        val filename = "${environment}-${mode}-${feed}.${format.extension}"
+
+                        ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
+
+                        when (format) {
+                            PROTOBUF -> {
+                                ctx
+                                    .contentType(MediaType.PROTOBUF)
+                                    .result(fm.toByteArray())
+                            }
+
+                            PBTEXT -> {
+                                ctx
+                                    .contentType(ContentType.TEXT_PLAIN)
+                                    .result(fm.toString())
+                            }
+
+                            JSON -> {
+                                ctx.json(fm)
+                            }
                         }
                     }
-
-                val filename = "${environment}-${mode}-${feed}.${format.extension}"
-
-                ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
-
-                when (format) {
-                    PROTOBUF -> {
-                        ctx.contentType(MediaType.PROTOBUF)
-                        ctx.result(fm.toByteArray())
+                    .exceptionally { throwable ->
+                        handleException(throwable, environment, mode)
                     }
-
-                    PBTEXT -> {
-                        ctx.contentType(ContentType.TEXT_PLAIN)
-                        ctx.result(fm.toString())
-                    }
-
-                    JSON -> {
-                        ctx.json(fm)
-                    }
-                }
-
-            } else {
-                val errorMessage = parseErrorMessage(response.errorBody()?.bytes())
-
-                if (errorMessage == INVALID_TOKEN_ERROR) {
-                    log.warn { "Invalidating token for environment $environment and mode $mode due to upstream response." }
-                    ptc.invalidate(TokenKey(environment, mode))
-                }
-
-                throw BadGatewayResponse(errorMessage ?: "")
             }
+
         }
 
-    private fun parseErrorMessage(errorBody: ByteArray?): String? = errorBody?.let {
-        try {
-            om.readValue<ErrorMessage>(it)
-        } catch (_: RuntimeJsonMappingException) {
-            null
-        } catch (_: IOException) {
-            null
-        } catch (_: StreamReadException) {
-            null
-        } catch (_: DatabindException) {
-            null
-        }?.errorMessage
+    private fun handleException(throwable: Throwable, environment: Environment, mode: Mode): Nothing {
+        log.error(throwable) { "Upstream HTTP error" }
+
+        val errorMessage = parseErrorMessage(om, extractErrorBody(throwable))
+
+        if (errorMessage == INVALID_TOKEN_ERROR) {
+            log.warn { "Invalidating token for environment $environment and mode $mode due to upstream response." }
+            ptc.invalidate(TokenKey(environment, mode))
+        }
+
+        if (errorMessage != null) {
+            throw BadGatewayResponse(errorMessage)
+        } else {
+            throw BadGatewayResponse(throwable.stackTraceToString())
+        }
+    }
+
+    private fun extractErrorBody(throwable: Throwable): ByteArray? {
+        return ((throwable as? CompletionException)?.cause as? HttpException)?.response()?.errorBody()?.bytes()
     }
 
     fun start() {

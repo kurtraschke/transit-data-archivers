@@ -15,6 +15,8 @@ import jakarta.inject.Singleton
 import systems.choochoo.transit_data_archivers.njt.model.Token
 import systems.choochoo.transit_data_archivers.njt.model.TokenKey
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
+import systems.choochoo.transit_data_archivers.njt.utils.TOKEN_LIFETIME
+import systems.choochoo.transit_data_archivers.njt.utils.parseErrorMessage
 import java.io.IOException
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
@@ -26,19 +28,17 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.isReadable
 import kotlin.io.path.isWritable
 import kotlin.time.Clock
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
-
-private val TOKEN_LIFETIME = 24.hours
 
 @Singleton
 internal class PersistentTokenCache @Inject constructor(
     @param:Named("username") private val username: String,
     @param:Named("password") private val password: String,
     private val s: MetaRealtimeService,
-    private val ts: TokenStore
+    private val ts: TokenStore,
+    private val om: ObjectMapper,
 ) {
     private val locks = ConcurrentHashMap<TokenKey, Lock>()
 
@@ -62,7 +62,7 @@ internal class PersistentTokenCache @Inject constructor(
         val rs = s.get(k.environment, k.mode)
 
         val call = rs.authenticateUser(username, password)
-        val response = call.execute()
+        val response = call.get()
 
         if (response.isSuccessful && response.body()?.authenticated == true && response.body()?.token != null) {
             val t = Token(
@@ -72,7 +72,13 @@ internal class PersistentTokenCache @Inject constructor(
 
             return t
         } else {
-            throw BadGatewayResponse()
+            val errorMessage = response.body()?.errorMessage ?: parseErrorMessage(om, response.errorBody()?.bytes())
+
+            if (errorMessage != null) {
+                throw BadGatewayResponse(errorMessage)
+            } else {
+                throw BadGatewayResponse("Unable to obtain token.")
+            }
         }
     }
 
