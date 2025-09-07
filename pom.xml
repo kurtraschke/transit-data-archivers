@@ -19,6 +19,7 @@
         <module>trackernet-archiver</module>
         <module>gtfs-rt-dump</module>
         <module>njt-api-proxy</module>
+        <module>query-proxy</module>
     </modules>
 
     <name>transit-data-archivers</name>
