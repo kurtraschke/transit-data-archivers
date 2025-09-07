@@ -1,6 +1,5 @@
 package systems.choochoo.transit_data_archivers.njt.services
 
-import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Field
@@ -28,13 +27,13 @@ internal interface RailRealtimeService : RealtimeService {
 
     @FormUrlEncoded
     @POST("api/GTFSRT/getAlerts")
-    override fun getAlerts(@Field("token") token: String): CompletableFuture<FeedMessage>
+    override fun getAlerts(@Field("token") token: String): CompletableFuture<ResponseBody>
 
     @FormUrlEncoded
     @POST("api/GTFSRT/getTripUpdates")
-    override fun getTripUpdates(@Field("token") token: String): CompletableFuture<FeedMessage>
+    override fun getTripUpdates(@Field("token") token: String): CompletableFuture<ResponseBody>
 
     @FormUrlEncoded
     @POST("api/GTFSRT/getVehiclePositions")
-    override fun getVehiclePositions(@Field("token") token: String): CompletableFuture<FeedMessage>
+    override fun getVehiclePositions(@Field("token") token: String): CompletableFuture<ResponseBody>
 }

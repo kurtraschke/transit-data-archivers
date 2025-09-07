@@ -1,10 +1,10 @@
 package systems.choochoo.transit_data_archivers.njt.model
 
-import com.google.transit.realtime.GtfsRealtime.FeedMessage
+import okhttp3.ResponseBody
 import systems.choochoo.transit_data_archivers.njt.services.RealtimeService
 import java.util.concurrent.CompletableFuture
 
-internal enum class Feed(val requestFunction: (RealtimeService, String) -> CompletableFuture<FeedMessage>) {
+internal enum class Feed(val requestFunction: (RealtimeService, String) -> CompletableFuture<ResponseBody>) {
     ALERTS(RealtimeService::getAlerts),
     TRIP_UPDATES(RealtimeService::getTripUpdates),
     VEHICLE_POSITIONS(RealtimeService::getVehiclePositions)

@@ -11,9 +11,9 @@ internal interface RealtimeService {
 
     fun getGTFS(token: String): CompletableFuture<ResponseBody>
 
-    fun getAlerts(token: String): CompletableFuture<FeedMessage>
+    fun getAlerts(token: String): CompletableFuture<ResponseBody>
 
-    fun getTripUpdates(token: String): CompletableFuture<FeedMessage>
+    fun getTripUpdates(token: String): CompletableFuture<ResponseBody>
 
-    fun getVehiclePositions(token: String): CompletableFuture<FeedMessage>
+    fun getVehiclePositions(token: String): CompletableFuture<ResponseBody>
 }

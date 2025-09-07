@@ -14,7 +14,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.jackson.JacksonConverterFactory
 import systems.choochoo.transit_data_archivers.njt.model.Environment
 import systems.choochoo.transit_data_archivers.njt.model.Mode
-import systems.choochoo.transit_data_archivers.njt.utils.ProtoConverterFactory
 
 
 @Singleton
@@ -29,7 +28,6 @@ internal class MetaRealtimeService @Inject constructor(
         .build(CacheLoader.from { (environment, mode) ->
             val retrofit = Retrofit.Builder()
                 .client(client)
-                .addConverterFactory(ProtoConverterFactory.create())
                 .addConverterFactory(JacksonConverterFactory.create(om))
                 .baseUrl(mode.baseUrlForEnvironment(environment))
                 .build()

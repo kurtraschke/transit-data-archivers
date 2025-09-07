@@ -5,12 +5,14 @@ package systems.choochoo.transit_data_archivers.njt
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.net.MediaType
+import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.Javalin
 import io.javalin.http.BadGatewayResponse
 import io.javalin.http.ContentType
+import io.javalin.http.Header.CONTENT_DISPOSITION
 import io.javalin.http.Header.EXPIRES
 import io.javalin.http.Header.LAST_MODIFIED
 import io.javalin.http.pathParamAsClass
@@ -145,7 +147,7 @@ internal class Proxy @Inject constructor(
                     .thenAccept { response ->
                         val filename = "${environment}-${mode}-GTFS.zip"
 
-                        ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
+                        ctx.header(CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
                             .contentType(ContentType.APPLICATION_ZIP)
                             .result(response.byteStream())
                     }
@@ -159,41 +161,29 @@ internal class Proxy @Inject constructor(
             val mode = ctx.pathParamAsClass<Mode>("mode").get()
             val feed = ctx.pathParamAsClass<Feed>("feed").get()
             val format = ctx.queryParamAsClass<OutputFormat>("format").getOrDefault(PROTOBUF)
-            val filterInvalidEntities = ctx.queryParamAsClass<Boolean>("filterInvalidEntities").getOrDefault(true)
 
             val token = ptc.get(TokenKey(environment, mode))
 
             ctx.future {
                 feed.requestFunction(s.get(environment, mode), token.token)
                     .thenAccept { response ->
-                        val fm = response
-                            .let {
-                                if (filterInvalidEntities) {
-                                    filterInvalidEntities(it)
-                                } else {
-                                    it
-                                }
-                            }
-
                         val filename = "${environment}-${mode}-${feed}.${format.extension}"
 
-                        ctx.header("Content-Disposition", "attachment; filename=\"$filename\"")
+                        ctx.header(CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
 
                         when (format) {
                             PROTOBUF -> {
-                                ctx
-                                    .contentType(MediaType.PROTOBUF)
-                                    .result(fm.toByteArray())
+                                ctx.contentType(MediaType.PROTOBUF)
+                                    .result(response.byteStream())
                             }
 
                             PBTEXT -> {
-                                ctx
-                                    .contentType(ContentType.TEXT_PLAIN)
-                                    .result(fm.toString())
+                                ctx.contentType(ContentType.TEXT_PLAIN)
+                                    .result(FeedMessage.parser().parsePartialFrom(response.byteStream()).toString())
                             }
 
                             JSON -> {
-                                ctx.json(fm)
+                                ctx.jsonStream(FeedMessage.parser().parsePartialFrom(response.byteStream()))
                             }
                         }
                     }
@@ -232,5 +222,4 @@ internal class Proxy @Inject constructor(
     fun stop() {
         app.stop()
     }
-
 }
