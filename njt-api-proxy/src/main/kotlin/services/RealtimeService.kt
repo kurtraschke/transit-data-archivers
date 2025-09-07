@@ -1,13 +1,12 @@
 package systems.choochoo.transit_data_archivers.njt.services
 
-import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import okhttp3.ResponseBody
-import retrofit2.Response
+import retrofit2.Call
 import systems.choochoo.transit_data_archivers.njt.model.AuthenticateUserResponse
 import java.util.concurrent.CompletableFuture
 
 internal interface RealtimeService {
-    fun authenticateUser(username: String, password: String): CompletableFuture<Response<AuthenticateUserResponse>>
+    fun authenticateUser(username: String, password: String): Call<AuthenticateUserResponse>
 
     fun getGTFS(token: String): CompletableFuture<ResponseBody>
 

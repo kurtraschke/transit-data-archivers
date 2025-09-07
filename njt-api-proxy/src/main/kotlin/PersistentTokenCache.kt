@@ -62,7 +62,7 @@ internal class PersistentTokenCache @Inject constructor(
         val rs = s.get(k.environment, k.mode)
 
         val call = rs.authenticateUser(username, password)
-        val response = call.get()
+        val response = call.execute()
 
         if (response.isSuccessful && response.body()?.authenticated == true && response.body()?.token != null) {
             val t = Token(
@@ -89,7 +89,7 @@ internal class PersistentTokenCache @Inject constructor(
             if (t == null) {
                 false
             } else {
-                Clock.System.now() - t.whenObtained < TOKEN_LIFETIME
+                (t.whenObtained + TOKEN_LIFETIME) < Clock.System.now()
             }
         }
     }

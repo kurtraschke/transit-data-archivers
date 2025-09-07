@@ -1,7 +1,7 @@
 package systems.choochoo.transit_data_archivers.njt.services
 
 import okhttp3.ResponseBody
-import retrofit2.Response
+import retrofit2.Call
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.POST
@@ -15,7 +15,7 @@ internal interface RailRealtimeService : RealtimeService {
     override fun authenticateUser(
         @Field("username") username: String,
         @Field("password") password: String
-    ): CompletableFuture<Response<AuthenticateUserResponse>>
+    ): Call<AuthenticateUserResponse>
 
     @FormUrlEncoded
     @POST("api/GTFSRT/isValidToken")
