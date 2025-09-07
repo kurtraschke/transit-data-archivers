@@ -25,12 +25,9 @@ class ClickHouseClientModule() {
                 .addEndpoint(database.url.toString())
                 .setClientName(userAgentString)
                 .setOptions(database.options)
-                .serverSetting("async_insert", "1")
-                .serverSetting("wait_for_async_insert", "1")
-                .serverSetting("input_format_try_infer_dates", "0")
-                .serverSetting("input_format_try_infer_datetimes", "0")
                 .setUsername(database.username)
                 .setPassword(database.password.value)
+                .useHttpCompression(true)
                 .build()
 
             if (!client.ping()) {

@@ -4,6 +4,7 @@ package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
 import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
+import com.clickhouse.client.api.insert.InsertSettings
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
 import com.google.common.base.Stopwatch
 import com.google.common.collect.ImmutableListMultimap
@@ -43,6 +44,12 @@ const val LAST_LAST_MODIFIED = "lastLastModified"
 const val LAST_HEADER_TIMESTAMP = "lastHeaderTimestamp"
 
 private val STATUSES_TO_PERSIST: EnumSet<FetchStatus> = EnumSet.of(SUCCESS, ERROR)
+
+private val settings = InsertSettings()
+    .serverSetting("async_insert", "1")
+    .serverSetting("wait_for_async_insert", "1")
+    .serverSetting("input_format_try_infer_dates", "0")
+    .serverSetting("input_format_try_infer_datetimes", "0")
 
 private val log = KotlinLogging.logger {}
 
@@ -234,7 +241,8 @@ internal class FeedArchiveJob : Job {
                                     "enabled_extensions"
                                 ),
                                 it,
-                                JSONEachRow
+                                JSONEachRow,
+                                settings
                             )
                         }
 

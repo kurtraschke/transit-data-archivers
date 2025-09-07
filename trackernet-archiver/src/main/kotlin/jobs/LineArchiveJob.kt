@@ -40,7 +40,12 @@ private val om = jsonMapper {
     )
 }
 
-private val settings = InsertSettings().serverSetting("materialized_views_ignore_errors", "1")
+private val settings = InsertSettings()
+    .serverSetting("async_insert", "1")
+    .serverSetting("wait_for_async_insert", "1")
+    .serverSetting("input_format_try_infer_dates", "0")
+    .serverSetting("input_format_try_infer_datetimes", "0")
+    .serverSetting("materialized_views_ignore_errors", "1")
 
 @DisallowConcurrentExecution
 internal class LineArchiveJob : Job {
