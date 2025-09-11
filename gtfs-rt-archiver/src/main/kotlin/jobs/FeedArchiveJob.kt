@@ -2,6 +2,7 @@
 
 package systems.choochoo.transit_data_archivers.gtfsrt.jobs
 
+import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
 import com.clickhouse.client.api.insert.InsertSettings
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
@@ -34,7 +35,6 @@ import java.io.ByteArrayInputStream
 import java.io.IOException
 import java.net.HttpURLConnection.HTTP_NOT_MODIFIED
 import java.util.*
-import java.util.concurrent.ExecutionException
 import kotlin.time.*
 import kotlin.time.Duration.Companion.milliseconds
 import java.lang.Boolean as jBoolean
@@ -115,10 +115,6 @@ internal class FeedArchiveJob : Job {
             val customizedClient = httpClient
                 .newBuilder()
                 .apply {
-                    feed.callTimeout?.let {
-                        callTimeout(it)
-                    }
-
                     if (feed.ignoreTLSErrors) {
                         ignoreAllTLSErrors()
                     }
@@ -253,7 +249,7 @@ internal class FeedArchiveJob : Job {
                     val rows = r.get().writtenRows
 
                     log.trace { "Wrote $rows rows" }
-                } catch (e: ExecutionException) {
+                } catch (e: ClickHouseException) {
                     log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
                     metrics.fallbackArchiveCount.labelValues(fc.producer, fc.feed).inc()
