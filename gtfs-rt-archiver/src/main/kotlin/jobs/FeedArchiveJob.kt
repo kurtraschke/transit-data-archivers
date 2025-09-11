@@ -115,6 +115,10 @@ internal class FeedArchiveJob : Job {
             val customizedClient = httpClient
                 .newBuilder()
                 .apply {
+                    feed.callTimeout?.let {
+                        callTimeout(it)
+                    }
+
                     if (feed.ignoreTLSErrors) {
                         ignoreAllTLSErrors()
                     }
