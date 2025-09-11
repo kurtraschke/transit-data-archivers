@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.net.HttpHeaders
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.http.BadGatewayResponse
 import jakarta.inject.Inject
 import jakarta.inject.Named
@@ -31,6 +32,7 @@ import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
+private val log = KotlinLogging.logger {}
 
 @Singleton
 internal class PersistentTokenCache @Inject constructor(
@@ -74,6 +76,8 @@ internal class PersistentTokenCache @Inject constructor(
         } else {
             val errorMessage = response.body()?.errorMessage ?: parseErrorMessage(om, response.errorBody()?.bytes())
 
+            log.error { "Token request for ${k.environment} ${k.mode} failed: $errorMessage" }
+
             if (errorMessage != null) {
                 throw BadGatewayResponse(errorMessage)
             } else {
@@ -89,7 +93,7 @@ internal class PersistentTokenCache @Inject constructor(
             if (t == null) {
                 false
             } else {
-                (t.whenObtained + TOKEN_LIFETIME) < Clock.System.now()
+                (t.whenObtained + TOKEN_LIFETIME) >= Clock.System.now()
             }
         }
     }
