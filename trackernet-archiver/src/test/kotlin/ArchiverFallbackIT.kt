@@ -2,7 +2,6 @@
 
 package systems.choochoo.transit_data_archivers.trackernet
 
-import com.clickhouse.client.api.Client
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
@@ -11,26 +10,22 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
-import org.testcontainers.clickhouse.ClickHouseContainer
-import org.testcontainers.images.builder.Transferable
-import org.testcontainers.junit.jupiter.Container
-import org.testcontainers.junit.jupiter.Testcontainers
-import org.testcontainers.utility.DockerImageName
 import picocli.CommandLine
 import picocli.CommandLine.ExitCode
-import systems.choochoo.transit_data_archivers.common.utils.clickhouseImageName
-import systems.choochoo.transit_data_archivers.common.utils.getRowCount
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
+import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.createDirectory
+import kotlin.io.path.extension
 import kotlin.io.path.writeText
 import kotlin.reflect.jvm.javaMethod
 
-@Testcontainers
+
 @WireMockTest(proxyMode = true, httpsEnabled = false)
 @ExtendWith(SystemStubsExtension::class)
-class ArchiverIT {
+class ArchiverFallbackIT {
 
     @SystemStub
     private val variables = EnvironmentVariables()
@@ -70,15 +65,17 @@ class ArchiverIT {
         )
 
         val testConfigFile = tempDir.resolve("test-config.yaml")
+        val fallbackPath = tempDir.resolve("fallback").createDirectory()
 
         testConfigFile.writeText(TEST_CONFIGURATION_YAML)
 
-        val clickhouseUrl = "http://${chContainer.host}:${chContainer.getMappedPort(8123)}/"
+        //https://www.rfc-editor.org/rfc/rfc6761.html#section-6.4
+
+        val clickhouseUrl = "http://clickhouse.invalid:8123/"
 
         variables.set("config.override.appKey", TEST_API_KEY)
         variables.set("config.override.database.url", clickhouseUrl)
-        variables.set("config.override.database.username", chContainer.username)
-        variables.set("config.override.database.password", chContainer.password)
+        variables.set("config.override.fallback.basePath", fallbackPath.toAbsolutePath().toString())
 
         val cmd = CommandLine(::runArchiver.javaMethod)
 
@@ -90,47 +87,17 @@ class ArchiverIT {
             verify(0, getRequestedFor(urlPathEqualTo("/TrackerNet/PredictionDetailed/W/WLO")))
         }
 
-        val client = Client.Builder()
-            .addEndpoint(clickhouseUrl)
-            .setUsername(chContainer.username)
-            .setPassword(chContainer.password)
-            .build()
-
-        client.use {
-            assertEquals(1, getRowCount(it, "prediction_summary"))
-            // One row, not two, because there were no trains at WLO, so we should not have fetched it!
-            // This is also validated by the WireMock assertion above.
-            assertEquals(1, getRowCount(it, "prediction_details"))
-        }
+        assertEquals(
+            2,
+            Files.walk(fallbackPath)
+                .filter { Files.isRegularFile(it) && it.extension == "json" }
+                .count()
+        )
 
     }
 
     companion object {
         const val TEST_API_KEY = "test-test-test"
-
-
-        const val TEST_SETUP_SQL = """
-CREATE TABLE prediction_summary
-(
-    fetch_time DateTime('UTC') CODEC(DoubleDelta),
-    line_code LowCardinality(String),
-    prediction_summary_json JSON CODEC(ZSTD(3))
-)
-ENGINE = MergeTree
-PRIMARY KEY (fetch_time, line_code)
-ORDER BY (fetch_time, line_code);
-
-CREATE TABLE prediction_details
-(
-    fetch_time DateTime('UTC') CODEC(DoubleDelta),
-    line_code LowCardinality(String),
-    station_code LowCardinality(String),
-    prediction_details_json JSON CODEC(ZSTD(3))
-)
-ENGINE = MergeTree
-PRIMARY KEY (fetch_time, line_code, station_code)
-ORDER BY (fetch_time, line_code, station_code);
-"""
 
         const val TEST_CONFIGURATION_YAML = """
 baseUrl: http://api.tfl.gov.uk/TrackerNet/
@@ -138,21 +105,12 @@ baseUrl: http://api.tfl.gov.uk/TrackerNet/
 database:
   options:
     database: "default"
+    
+fallback:
+    enabled: true
 
 lines:
   - line_code: "W"
 """
-
-        @Container
-        @JvmField
-        var chContainer: ClickHouseContainer = ClickHouseContainer(
-            DockerImageName
-                .parse(clickhouseImageName)
-                .asCompatibleSubstituteFor("clickhouse/clickhouse-server")
-        )
-            .withCopyToContainer(
-                Transferable.of(TEST_SETUP_SQL),
-                "/docker-entrypoint-initdb.d/test-setup.sql"
-            )
     }
 }

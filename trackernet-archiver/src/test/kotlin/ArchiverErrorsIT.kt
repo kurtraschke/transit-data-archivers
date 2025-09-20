@@ -24,10 +24,10 @@ class ArchiverErrorsIT {
 
         assertEquals(CommandLine.ExitCode.SOFTWARE, exitCode)
     }
-}
 
-@Suppress("HttpUrlsUsage")
-const val TEST_BAD_CONFIGURATION_YAML = """
+    companion object {
+        @Suppress("HttpUrlsUsage")
+        const val TEST_BAD_CONFIGURATION_YAML = """
 baseUrl: http://api.tfl.gov.uk/TrackerNet # Retrofit will throw an error here because the base URL does not end in a trailing slash
 
 appKey: 'foo'
@@ -40,3 +40,5 @@ database:
 lines:
   - line_code: "W"
 """
+    }
+}
