@@ -28,6 +28,7 @@ class ClickHouseClientModule() {
                 .setUsername(database.username)
                 .setPassword(database.password.value)
                 .useHttpCompression(true)
+                .useAsyncRequests(true)
                 .build()
 
             if (!client.ping()) {

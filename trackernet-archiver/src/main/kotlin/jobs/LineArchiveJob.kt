@@ -2,7 +2,6 @@
 
 package systems.choochoo.transit_data_archivers.trackernet.jobs
 
-import com.clickhouse.client.api.ClickHouseException
 import com.clickhouse.client.api.Client
 import com.clickhouse.client.api.insert.InsertSettings
 import com.clickhouse.data.ClickHouseFormat.JSONEachRow
@@ -25,6 +24,7 @@ import systems.choochoo.transit_data_archivers.trackernet.services.TrackernetSer
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import java.util.concurrent.ExecutionException
 import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
@@ -149,7 +149,7 @@ internal class LineArchiveJob : Job {
             }
 
             log.trace { "Inserted ${response.writtenRows} summary rows" }
-        } catch (e: ClickHouseException) {
+        } catch (e: ExecutionException) {
             log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
             fallbackWriter.write(
@@ -184,7 +184,7 @@ internal class LineArchiveJob : Job {
             }.get()
 
             log.trace { "Inserted ${response.writtenRows} detail rows" }
-        } catch (e: ClickHouseException) {
+        } catch (e: ExecutionException) {
             log.warn(e) { "Exception while persisting to database; will attempt fallback write" }
 
             fallbackWriter.write(
