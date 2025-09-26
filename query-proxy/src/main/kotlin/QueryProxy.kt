@@ -2,7 +2,6 @@ package systems.choochoo.transit_data_archivers.query_proxy
 
 import com.clickhouse.client.api.Client
 import com.clickhouse.client.api.query.QuerySettings
-import com.clickhouse.data.ClickHouseFormat
 import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -114,7 +113,7 @@ internal class QueryProxy @Inject constructor(
                     .associate { (k, v) -> k to ctx.queryParamAsClass(k, v.dataType.typeClass.java).get() }
 
                 val settings = QuerySettings()
-                settings.format = ClickHouseFormat.JSONEachRow
+                settings.format = queryConfiguration.outputFormat.format
                 settings.serverSetting("readonly", "1")
                 settings.httpHeader(X_FORWARDED_FOR, ctx.header(X_FORWARDED_FOR)?.split(",")?.get(0) ?: ctx.ip())
                 queryConfiguration.clientSettings.forEach {
@@ -125,23 +124,23 @@ internal class QueryProxy @Inject constructor(
                 }
 
                 ctx.future {
-                    client.query(queryConfiguration.queryText, parameters, settings)
+                    client.query(
+                        queryConfiguration.queryText,
+                        parameters,
+                        QuerySettings.merge(settings, queryConfiguration.outputFormat.settings)
+                    )
                         .thenAccept { result ->
                             ctx
-                                .contentType("application/x-ndjson")
+                                .contentType(queryConfiguration.outputFormat.contentType)
                                 .result(result.inputStream)
                         }
                         .exceptionally { throwable ->
                             log.error(throwable) { "ClickHouse query failed" }
-                            if (throwable.message != null) {
-                                throw BadGatewayResponse(throwable.message!!)
-                            } else {
-                                throw BadGatewayResponse()
-                            }
+                            throw BadGatewayResponse()
                         }
                 }
             } else {
-                throw NotFoundResponse("Query $queryName not found")
+                throw NotFoundResponse("Query not found")
             }
         }
 

@@ -4,6 +4,7 @@ import systems.choochoo.transit_data_archivers.common.configuration.DatabaseConf
 import systems.choochoo.transit_data_archivers.common.configuration.HasDatabaseConfiguration
 import systems.choochoo.transit_data_archivers.common.configuration.HasOperatorContact
 import systems.choochoo.transit_data_archivers.query_proxy.model.DataTypes
+import systems.choochoo.transit_data_archivers.query_proxy.model.OutputFormats
 
 internal data class Configuration(
     override val database: DatabaseConfiguration = DatabaseConfiguration(),
@@ -13,6 +14,7 @@ internal data class Configuration(
 
 internal data class Query(
     val queryText: String,
+    val outputFormat: OutputFormats,
     val clientSettings: Map<String, String> = emptyMap(),
     val serverSettings: Map<String, String> = emptyMap(),
     val parameters: Map<String, QueryParameter> = emptyMap()
