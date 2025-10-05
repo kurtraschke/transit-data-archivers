@@ -14,14 +14,14 @@ enum class OutputFormats(
     JSON_LINES(
         JSONEachRow,
         QuerySettings()
-            .serverSetting("output_format_json_quote_64bit_integers", "1"),
+            .serverSetting("output_format_json_quote_64bit_integers", "0"),
         "application/x-ndjson"
     ),
     JSON_ARRAY_OF_OBJECTS(
         JSONEachRow,
         QuerySettings()
             .serverSetting("output_format_json_array_of_rows", "1")
-            .serverSetting("output_format_json_quote_64bit_integers", "1"),
+            .serverSetting("output_format_json_quote_64bit_integers", "0"),
         ContentType.JSON
     ),
     CSV(
