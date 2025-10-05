@@ -35,7 +35,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <testcontainers.version>1.21.3</testcontainers.version>
         <protobuf.version>4.32.1</protobuf.version>
-        <dagger.version>2.57.1</dagger.version>
+        <dagger.version>2.57.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.11</jaxb-tools.version>
@@ -363,7 +363,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.13.4</version>
+                <version>6.0.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -396,7 +396,7 @@
             <dependency>
                 <groupId>io.mockk</groupId>
                 <artifactId>mockk-jvm</artifactId>
-                <version>1.14.5</version>
+                <version>1.14.6</version>
                 <scope>test</scope>
             </dependency>
 
@@ -487,7 +487,7 @@
             <dependency>
                 <groupId>org.logevents</groupId>
                 <artifactId>logevents</artifactId>
-                <version>0.5.8</version>
+                <version>0.5.9</version>
                 <scope>runtime</scope>
             </dependency>
             <dependency>
@@ -558,7 +558,7 @@
             <dependency>
                 <groupId>com.sun.xml.bind</groupId>
                 <artifactId>jaxb-impl</artifactId>
-                <version>4.0.5</version>
+                <version>4.0.6</version>
                 <scope>runtime</scope>
             </dependency>
 
@@ -597,7 +597,7 @@
             <dependency>
                 <groupId>org.apache.httpcomponents.client5</groupId>
                 <artifactId>httpclient5</artifactId>
-                <version>5.5</version>
+                <version>5.5.1</version>
             </dependency>
 
             <dependency>
@@ -622,7 +622,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-4</version>
+                <version>1.5.7-5</version>
             </dependency>
 
             <!-- javalin -->
