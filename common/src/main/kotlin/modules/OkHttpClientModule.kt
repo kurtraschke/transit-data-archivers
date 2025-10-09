@@ -8,10 +8,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.binder.okhttp3.OkHttpMetricsEventListener
 import jakarta.inject.Singleton
+import okhttp3.CompressionInterceptor
+import okhttp3.Gzip
 import okhttp3.OkHttp
 import okhttp3.OkHttpClient
-import okhttp3.brotli.BrotliInterceptor
+import okhttp3.brotli.Brotli
 import okhttp3.java.net.cookiejar.JavaNetCookieJar
+import okhttp3.zstd.Zstd
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.configuration.HasCallTimeout
 import systems.choochoo.transit_data_archivers.common.configuration.HasOperatorContact
@@ -46,7 +49,7 @@ abstract class OkHttpClientModule() {
             return OkHttpClient.Builder()
                 .cookieJar(jar)
                 .callTimeout(hct.callTimeout)
-                .addInterceptor(BrotliInterceptor)
+                .addInterceptor(CompressionInterceptor(Zstd, Brotli, Gzip))
                 .apply {
                     if (meterRegistry.isPresent) {
                         eventListener(
