@@ -21,6 +21,8 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import java.nio.file.Path
 import kotlin.io.path.writeText
 import kotlin.reflect.jvm.javaMethod
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.toJavaDuration
 
 @Testcontainers
 @WireMockTest(proxyMode = true)
@@ -117,5 +119,6 @@ class ArchiverIT {
                 Transferable.of(TEST_SETUP_SQL),
                 "/docker-entrypoint-initdb.d/test-setup.sql"
             )
+            .withStartupTimeout(2.minutes.toJavaDuration())
     }
 }
