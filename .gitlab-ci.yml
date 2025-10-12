@@ -19,21 +19,12 @@ image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/maven:3-amazoncorretto-21-al202
 
 test:jdk21:
   stage: test
+  tags:
+    - docker-socket
   cache:
     - key: "maven-cache-$CI_JOB_NAME"
       paths:
         - .m2/repository
-  services:
-    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind-rootless
-      alias: docker
-      command: ["--experimental", "--feature", "containerd-snapshotter=true" ]
-  variables:
-    DOCKER_HOST: tcp://docker:2376
-    DOCKER_DRIVER: overlayfs
-    DOCKER_TLS_VERIFY: 1
-    DOCKER_TLS_CERTDIR: "/certs"
-    DOCKER_CERT_PATH: "/certs/client"
-    TESTCONTAINERS_RYUK_DISABLED: true
   before_script:
     - mkdir -p ~/.docker/
     - |
@@ -52,6 +43,8 @@ test:jdk21:
 
 deploy:jdk21:
   stage: deploy
+  tags:
+    - docker-socket
   cache:
     - key: "maven-cache-$CI_JOB_NAME"
       paths:
