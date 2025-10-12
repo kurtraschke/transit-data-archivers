@@ -39,7 +39,7 @@
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.11</jaxb-tools.version>
-        <okhttp.version>5.2.0</okhttp.version>
+        <okhttp.version>5.2.1</okhttp.version>
         <javalin.version>6.7.0</javalin.version>
     </properties>
 
