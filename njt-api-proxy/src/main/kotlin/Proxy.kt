@@ -147,7 +147,7 @@ internal class Proxy @Inject constructor(
                     .thenAccept { response ->
                         val filename = "${environment}-${mode}-GTFS.zip"
 
-                        ctx.header(CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
+                        ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
                             .contentType(ContentType.APPLICATION_ZIP)
                             .result(response.byteStream())
                     }
@@ -169,7 +169,7 @@ internal class Proxy @Inject constructor(
                     .thenAccept { response ->
                         val filename = "${environment}-${mode}-${feed}.${format.extension}"
 
-                        ctx.header(CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
+                        ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
 
                         when (format) {
                             PROTOBUF -> {
