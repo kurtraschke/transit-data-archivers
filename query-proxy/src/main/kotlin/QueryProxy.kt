@@ -102,7 +102,7 @@ internal class QueryProxy @Inject constructor(
             }
         }
         .get("/query/{queryName}") { ctx ->
-            NaiveRateLimit.requestPerTimeUnit(ctx, 10, TimeUnit.SECONDS)
+            NaiveRateLimit.requestPerTimeUnit(ctx, configuration.rateLimit.requests, configuration.rateLimit.unit)
 
             val queryName = ctx.pathParamAsClass<String>("queryName").get()
 
