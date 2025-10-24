@@ -30,7 +30,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>21</kotlin.compiler.jvmTarget>
         <shade.skip>false</shade.skip>
-        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
         <protobuf.version>4.33.0</protobuf.version>
@@ -258,7 +258,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.6.1</version>
+                    <version>3.6.2</version>
                 </plugin>
 
                 <plugin>
@@ -322,6 +322,12 @@
                                     <version>.+-?M\d+</version>
                                 </ignoreVersion>
                             </ignoreVersions>
+                            <rule group="org.jetbrains.kotlinx" artifact="kotlinx-datetime-jvm">
+                                <ignoreVersion>
+                                    <type>regex</type>
+                                    <version>.*-compat</version>
+                                </ignoreVersion>
+                            </rule>
                         </ruleSet>
                     </configuration>
                 </plugin>
@@ -452,7 +458,7 @@
             <dependency>
                 <groupId>org.quartz-scheduler</groupId>
                 <artifactId>quartz</artifactId>
-                <version>2.5.0</version>
+                <version>2.5.1</version>
             </dependency>
 
             <!-- jackson, including guava and protobuf -->
@@ -628,7 +634,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-5</version>
+                <version>1.5.7-6</version>
             </dependency>
 
             <!-- javalin -->
