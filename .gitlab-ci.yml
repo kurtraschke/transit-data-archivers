@@ -15,7 +15,7 @@ variables:
     -DinstallAtEnd=true
     -DdeployAtEnd=true
 
-image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/maven:3-amazoncorretto-21-al2023
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/maven:3-amazoncorretto-25-al2023
 
 test:jdk21:
   stage: test
@@ -82,7 +82,7 @@ deploy:jdk21:
     - echo $CI_REGISTRY_IMAGE
     - >-
       mvn ${MAVEN_CLI_OPTS} package jib:build
-      -Djib.from.image=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/amazoncorretto:21-al2023
+      -Djib.from.image=${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/amazoncorretto:25-al2023-headless
       -Djib.from.auth.username=${CI_DEPENDENCY_PROXY_USER}
       -Djib.from.auth.password=${CI_DEPENDENCY_PROXY_PASSWORD}
       -Djib.to.auth.username=${CI_REGISTRY_USER}
