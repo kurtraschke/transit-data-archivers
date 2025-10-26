@@ -17,7 +17,7 @@ variables:
 
 image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/maven:3-amazoncorretto-25-al2023
 
-test:jdk21:
+test:jdk25:
   stage: test
   tags:
     - docker-socket
@@ -41,7 +41,7 @@ test:jdk21:
   script:
     - mvn ${MAVEN_CLI_OPTS} -Dshade.skip=true verify
 
-deploy:jdk21:
+deploy:jdk25:
   stage: deploy
   tags:
     - docker-socket
