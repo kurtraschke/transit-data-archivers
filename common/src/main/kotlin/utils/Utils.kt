@@ -14,15 +14,10 @@ fun constructUserAgentString(
     applicationVersion: ApplicationVersion,
     operatorContact: String? = null,
     okHttpVersion: String? = null
-): String {
-    val userAgentString =
-        "${applicationVersion.groupId}:${applicationVersion.artifactId}/${applicationVersion.version}" +
-                " (${applicationVersion.commitId}; ${applicationVersion.branch})" +
-                (okHttpVersion?.let { " (okhttp/$it)" } ?: "") +
-                (operatorContact?.let { " ($it)" } ?: "")
-
-    return userAgentString
-}
+): String = "${applicationVersion.groupId}:${applicationVersion.artifactId}/${applicationVersion.version}" +
+            " (${applicationVersion.commitId}; ${applicationVersion.branch})" +
+            (okHttpVersion?.let { " (okhttp/$it)" } ?: "") +
+            (operatorContact?.let { " ($it)" } ?: "")
 
 fun OkHttpClient.Builder.ignoreAllTLSErrors(): OkHttpClient.Builder {
     val naiveTrustManager = object : X509TrustManager {
