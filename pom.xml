@@ -38,7 +38,6 @@
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.11</jaxb-tools.version>
-        <okhttp.version>5.2.1</okhttp.version>
         <javalin.version>6.7.0</javalin.version>
     </properties>
 
@@ -363,7 +362,7 @@
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-bom</artifactId>
-                <version>1.4.1</version>
+                <version>1.4.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -377,21 +376,21 @@
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
-                <version>${okhttp.version}</version>
+                <version>5.3.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.20.0</version>
+                <version>2.20.1</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>6.0.0</version>
+                <version>6.0.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -548,7 +547,7 @@
             <dependency>
                 <groupId>io.arrow-kt</groupId>
                 <artifactId>arrow-core-jvm</artifactId>
-                <version>2.1.2</version>
+                <version>2.2.0</version>
             </dependency>
 
             <!-- dagger -->
@@ -603,10 +602,10 @@
             <dependency>
                 <groupId>com.clickhouse</groupId>
                 <artifactId>client-v2</artifactId>
-                <version>0.9.2</version>
+                <version>0.9.3</version>
             </dependency>
 
-            <dependency>
+            <!--<dependency>
                 <groupId>org.apache.httpcomponents.client5</groupId>
                 <artifactId>httpclient5</artifactId>
                 <version>5.5.1</version>
@@ -622,7 +621,7 @@
                 <groupId>org.apache.httpcomponents.core5</groupId>
                 <artifactId>httpcore5</artifactId>
                 <version>5.3.6</version>
-            </dependency>
+            </dependency>-->
 
             <dependency>
                 <groupId>org.jetbrains</groupId>
