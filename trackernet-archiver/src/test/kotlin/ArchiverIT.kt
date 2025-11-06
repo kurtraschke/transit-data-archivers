@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.api.io.TempDir
 import org.testcontainers.clickhouse.ClickHouseContainer
+import org.testcontainers.images.PullPolicy
 import org.testcontainers.images.builder.Transferable
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -150,6 +151,7 @@ lines:
                 .parse(clickhouseImageName)
                 .asCompatibleSubstituteFor("clickhouse/clickhouse-server")
         )
+            .withImagePullPolicy(PullPolicy.alwaysPull())
             .withCopyToContainer(
                 Transferable.of(TEST_SETUP_SQL),
                 "/docker-entrypoint-initdb.d/test-setup.sql"
