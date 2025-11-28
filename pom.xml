@@ -37,7 +37,7 @@
         <dagger.version>2.57.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
-        <jaxb-tools.version>4.0.11</jaxb-tools.version>
+        <jaxb-tools.version>4.0.12</jaxb-tools.version>
         <javalin.version>6.7.0</javalin.version>
     </properties>
 
@@ -60,7 +60,7 @@
             <extension>
                 <groupId>kr.motd.maven</groupId>
                 <artifactId>os-maven-plugin</artifactId>
-                <version>1.7.0</version>
+                <version>1.7.1</version>
             </extension>
         </extensions>
 
@@ -300,7 +300,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.19.1</version>
+                    <version>2.20.1</version>
                     <configuration>
                         <ruleSet>
                             <ignoreVersions>
