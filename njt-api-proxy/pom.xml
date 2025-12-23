@@ -35,6 +35,11 @@
                             </sourceDirs>
                             <annotationProcessorPaths>
                                 <annotationProcessorPath>
+                                    <groupId>org.jetbrains.kotlin</groupId>
+                                    <artifactId>kotlin-metadata-jvm</artifactId>
+                                    <version>${kotlin.version}</version>
+                                </annotationProcessorPath>
+                                <annotationProcessorPath>
                                     <groupId>info.picocli</groupId>
                                     <artifactId>picocli-codegen</artifactId>
                                     <version>${picocli.version}</version>
