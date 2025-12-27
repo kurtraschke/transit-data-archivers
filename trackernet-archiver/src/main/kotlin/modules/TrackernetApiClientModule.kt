@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.minutes
 private val log = KotlinLogging.logger {}
 
 @Module
-internal class TrackernetApiClientModule() {
+internal class TrackernetApiClientModule {
     companion object {
         @Provides
         @Singleton

@@ -26,7 +26,7 @@ import java.util.*
 private val log = KotlinLogging.logger {}
 
 @Module
-abstract class OkHttpClientModule() {
+abstract class OkHttpClientModule {
     @BindsOptionalOf
     abstract fun bindOptionalMeterRegistry(): MeterRegistry
 

@@ -5,6 +5,7 @@ import retrofit2.Call
 import systems.choochoo.transit_data_archivers.njt.model.AuthenticateUserResponse
 import java.util.concurrent.CompletableFuture
 
+@Suppress("EmptyMethod")
 internal interface RealtimeService {
     fun authenticateUser(username: String, password: String): Call<AuthenticateUserResponse>
 

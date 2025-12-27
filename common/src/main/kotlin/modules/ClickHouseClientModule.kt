@@ -13,7 +13,7 @@ import systems.choochoo.transit_data_archivers.common.utils.constructUserAgentSt
 private val log = KotlinLogging.logger {}
 
 @Module
-class ClickHouseClientModule() {
+class ClickHouseClientModule {
     companion object {
         @Provides
         @Singleton

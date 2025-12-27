@@ -25,7 +25,6 @@ import systems.choochoo.transit_data_archivers.common.modules.ClickHouseClientMo
 import systems.choochoo.transit_data_archivers.common.modules.MicrometerModule
 import systems.choochoo.transit_data_archivers.query_proxy.modules.ConfigurationModule
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger {}
 

@@ -12,7 +12,7 @@ import jakarta.inject.Singleton
 
 
 @Module
-internal class ObjectMapperModule() {
+internal class ObjectMapperModule {
     companion object {
         @Provides
         @Singleton
