@@ -33,7 +33,7 @@
         <kotlin.version>2.3.0</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <protobuf.version>4.33.2</protobuf.version>
+        <protobuf.version>4.33.3</protobuf.version>
         <dagger.version>2.57.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
@@ -390,7 +390,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>6.0.1</version>
+                <version>6.0.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -504,7 +504,7 @@
             <dependency>
                 <groupId>io.github.oshai</groupId>
                 <artifactId>kotlin-logging-jvm</artifactId>
-                <version>7.0.13</version>
+                <version>7.0.14</version>
             </dependency>
 
             <!-- picocli -->
