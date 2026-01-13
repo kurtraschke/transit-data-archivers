@@ -33,7 +33,7 @@
         <kotlin.version>2.3.0</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <protobuf.version>4.33.3</protobuf.version>
+        <protobuf.version>4.33.4</protobuf.version>
         <dagger.version>2.57.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
@@ -369,7 +369,7 @@
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-bom</artifactId>
-                <version>1.16.1</version>
+                <version>1.16.2</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -602,7 +602,7 @@
             <dependency>
                 <groupId>com.clickhouse</groupId>
                 <artifactId>client-v2</artifactId>
-                <version>0.9.5</version>
+                <version>0.9.6</version>
             </dependency>
 
             <!--<dependency>
