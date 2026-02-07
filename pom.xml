@@ -30,11 +30,11 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
         <shade.skip>false</shade.skip>
-        <kotlin.version>2.3.0</kotlin.version>
+        <kotlin.version>2.3.10</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
-        <protobuf.version>4.33.4</protobuf.version>
-        <dagger.version>2.57.2</dagger.version>
+        <protobuf.version>4.33.5</protobuf.version>
+        <dagger.version>2.59.1</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.12</jaxb-tools.version>
@@ -103,7 +103,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.14.1</version>
+                    <version>3.15.0</version>
                     <executions>
                         <execution>
                             <id>default-compile</id>
@@ -300,7 +300,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>2.21.0</version>
                     <configuration>
                         <ruleSet>
                             <ignoreVersions>
@@ -383,7 +383,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.20.1</version>
+                <version>2.21.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -430,7 +430,7 @@
             <dependency>
                 <groupId>io.mockk</groupId>
                 <artifactId>mockk-jvm</artifactId>
-                <version>1.14.7</version>
+                <version>1.14.9</version>
                 <scope>test</scope>
             </dependency>
 
@@ -563,7 +563,7 @@
             <dependency>
                 <groupId>jakarta.xml.bind</groupId>
                 <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>4.0.4</version>
+                <version>4.0.5</version>
             </dependency>
 
             <dependency>
@@ -633,7 +633,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-6</version>
+                <version>1.5.7-7</version>
             </dependency>
 
             <!-- javalin -->
