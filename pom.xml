@@ -34,7 +34,7 @@
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
         <protobuf.version>4.33.5</protobuf.version>
-        <dagger.version>2.59.1</dagger.version>
+        <dagger.version>2.59.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.12</jaxb-tools.version>
@@ -154,12 +154,12 @@
 
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.4</version>
+                    <version>3.5.5</version>
                 </plugin>
 
                 <plugin>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.5.4</version>
+                    <version>3.5.5</version>
                     <executions>
                         <execution>
                             <goals>
@@ -352,6 +352,17 @@
                             </rules>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>enforce-upper-bound-deps</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireUpperBoundDeps />
+                            </rules>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
@@ -362,14 +373,14 @@
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-bom</artifactId>
-                <version>1.4.3</version>
+                <version>1.5.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>io.micrometer</groupId>
                 <artifactId>micrometer-bom</artifactId>
-                <version>1.16.2</version>
+                <version>1.16.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -390,7 +401,7 @@
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>6.0.2</version>
+                <version>6.0.3</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -504,7 +515,7 @@
             <dependency>
                 <groupId>io.github.oshai</groupId>
                 <artifactId>kotlin-logging-jvm</artifactId>
-                <version>7.0.14</version>
+                <version>8.0.01</version>
             </dependency>
 
             <!-- picocli -->
@@ -626,7 +637,7 @@
             <dependency>
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
-                <version>26.0.2-1</version>
+                <version>26.1.0</version>
             </dependency>
 
             <!-- zstd-jni -->
@@ -651,6 +662,12 @@
                 <groupId>com.aayushatharva.brotli4j</groupId>
                 <artifactId>brotli4j</artifactId>
                 <version>1.20.0</version>
+            </dependency>
+
+            <dependency>
+                <groupId>jakarta.activation</groupId>
+                <artifactId>jakarta.activation-api</artifactId>
+                <version>2.1.4</version>
             </dependency>
 
         </dependencies>
