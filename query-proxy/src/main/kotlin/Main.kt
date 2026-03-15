@@ -1,4 +1,4 @@
-@file:OptIn(ExperimentalTime::class, ExperimentalHoplite::class)
+@file:OptIn(ExperimentalHoplite::class)
 
 package systems.choochoo.transit_data_archivers.query_proxy
 
@@ -23,7 +23,6 @@ import java.nio.file.Path
 import java.util.concurrent.CountDownLatch
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
-import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 private val log = KotlinLogging.logger {}

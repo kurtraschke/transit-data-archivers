@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.trackernet
 
 import dagger.BindsInstance
@@ -30,7 +28,6 @@ import systems.choochoo.transit_data_archivers.trackernet.modules.DaggerJobFacto
 import systems.choochoo.transit_data_archivers.trackernet.modules.TrackernetApiClientModule
 import java.util.*
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
 private val log = KotlinLogging.logger {}

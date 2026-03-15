@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.gtfsrt.entities
 
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -13,7 +11,6 @@ import com.google.transit.realtime.GtfsRealtime.FeedMessage
 import okhttp3.Protocol
 import systems.choochoo.transit_data_archivers.common.utils.EpochSecondInstant
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 internal enum class FetchStatus {

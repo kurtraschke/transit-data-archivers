@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.trackernet.jobs
 
 import com.clickhouse.client.api.Client
@@ -25,7 +23,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.concurrent.ExecutionException
-import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 

@@ -1,12 +1,9 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.common.utils
 
 import kotlin.math.ceil
 import kotlin.math.pow
 import kotlin.random.Random
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 class Backoff(

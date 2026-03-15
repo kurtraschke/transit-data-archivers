@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.trackernet.listeners
 
 import io.github.oshai.kotlinlogging.slf4j.toKLogger
@@ -11,7 +9,6 @@ import org.quartz.listeners.JobListenerSupport
 import java.util.*
 import kotlin.time.Clock
 import kotlin.time.Duration
-import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
 internal class FixedDelayJobListener(val key: JobKey, val interval: Duration) : JobListenerSupport() {

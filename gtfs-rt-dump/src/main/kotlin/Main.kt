@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.gtfsrt.dump
 
 import com.fasterxml.jackson.module.kotlin.jsonMapper
@@ -22,7 +20,6 @@ import java.nio.file.Path
 import kotlin.io.path.readBytes
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 

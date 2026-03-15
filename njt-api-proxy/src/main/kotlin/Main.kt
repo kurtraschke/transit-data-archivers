@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.njt
 
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics
@@ -18,7 +16,6 @@ import java.nio.file.Path
 import java.util.concurrent.CountDownLatch
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
-import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 

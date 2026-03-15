@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.common.utils
 
 import com.github.luben.zstd.Zstd
@@ -13,7 +11,6 @@ import kotlin.io.path.isReadable
 import kotlin.io.path.isWritable
 import kotlin.io.path.writeBytes
 import kotlin.text.Charsets.UTF_8
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 private val log = KotlinLogging.logger {}

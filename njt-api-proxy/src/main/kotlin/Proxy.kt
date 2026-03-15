@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.njt
 
 
@@ -45,7 +43,6 @@ import systems.choochoo.transit_data_archivers.njt.utils.*
 import java.nio.file.Path
 import java.util.concurrent.CompletionException
 import java.util.concurrent.CountDownLatch
-import kotlin.time.ExperimentalTime
 
 private val log = KotlinLogging.logger {}
 

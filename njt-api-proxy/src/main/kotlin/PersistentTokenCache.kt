@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.njt
 
 import com.fasterxml.jackson.core.exc.StreamReadException
@@ -29,7 +27,6 @@ import kotlin.io.path.isDirectory
 import kotlin.io.path.isReadable
 import kotlin.io.path.isWritable
 import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
 import kotlin.time.toKotlinInstant
 
 private val log = KotlinLogging.logger {}

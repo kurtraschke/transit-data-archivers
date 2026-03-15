@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.common.utils
 
 import kotlinx.datetime.UtcOffset
@@ -7,7 +5,6 @@ import kotlinx.datetime.format
 import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.DayOfWeekNames
 import kotlinx.datetime.format.MonthNames
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 fun Instant.toHttpDateString(): String {

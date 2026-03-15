@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.common.utils
 
 import io.mockk.every
@@ -11,7 +9,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @ExtendWith(MockKExtension::class)

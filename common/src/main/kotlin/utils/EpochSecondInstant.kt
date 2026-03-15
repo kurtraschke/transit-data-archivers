@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.common.utils
 
 import com.fasterxml.jackson.core.JsonGenerator
@@ -8,7 +6,6 @@ import com.fasterxml.jackson.databind.DeserializationContext
 import com.fasterxml.jackson.databind.JsonDeserializer
 import com.fasterxml.jackson.databind.JsonSerializer
 import com.fasterxml.jackson.databind.SerializerProvider
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 class EpochSecondInstant private constructor() {

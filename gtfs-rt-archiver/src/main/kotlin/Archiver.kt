@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.gtfsrt
 
 import dagger.BindsInstance
@@ -28,7 +26,6 @@ import systems.choochoo.transit_data_archivers.gtfsrt.modules.DaggerJobFactoryMo
 import java.util.*
 import kotlin.time.Clock
 import kotlin.time.DurationUnit.*
-import kotlin.time.ExperimentalTime
 import kotlin.time.toJavaInstant
 
 private val log = KotlinLogging.logger {}

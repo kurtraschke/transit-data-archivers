@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalTime::class)
-
 package systems.choochoo.transit_data_archivers.gtfsrt.listeners
 
 import dagger.assisted.Assisted
@@ -13,7 +11,9 @@ import systems.choochoo.transit_data_archivers.gtfsrt.Configuration
 import systems.choochoo.transit_data_archivers.gtfsrt.entities.FeedContents
 import systems.choochoo.transit_data_archivers.gtfsrt.jobs.JobUnpauserJob
 import java.util.*
-import kotlin.time.*
+import kotlin.time.Clock
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinInstant
 
 @AssistedFactory
 internal interface JobFailureListenerFactory {
