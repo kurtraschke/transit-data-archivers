@@ -6,19 +6,23 @@ import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.Javalin
+import io.javalin.compression.Brotli
+import io.javalin.compression.CompressionStrategy
+import io.javalin.compression.Gzip
+import io.javalin.compression.Zstd
 import io.javalin.http.BadGatewayResponse
 import io.javalin.http.Header.X_FORWARDED_FOR
 import io.javalin.http.NotFoundResponse
 import io.javalin.http.pathParamAsClass
-import io.javalin.http.util.NaiveRateLimit
 import io.javalin.micrometer.MicrometerPlugin
+import io.javalin.plugin.bundled.RateLimitPlugin
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import io.prometheus.metrics.exporter.servlet.jakarta.PrometheusMetricsServlet
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
 import kotlinx.datetime.LocalDate
-import org.eclipse.jetty.servlet.ServletHolder
+import org.eclipse.jetty.ee10.servlet.ServletHolder
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
 import systems.choochoo.transit_data_archivers.common.modules.ClickHouseClientModule
@@ -71,7 +75,7 @@ internal class QueryProxy @Inject constructor(
     val app: Javalin = Javalin
         .create { config ->
             config.http.generateEtags = true
-            config.http.brotliAndGzipCompression()
+            config.http.compressionStrategy = CompressionStrategy(Brotli(), Gzip(), Zstd())
 
             config.validation.register(Boolean::class.java) { it.toBooleanStrict() }
             config.validation.register(UByte::class.java) { it.toUByte() }
@@ -94,52 +98,57 @@ internal class QueryProxy @Inject constructor(
 
                 handler.addServlet(prometheusMetricsServlet, "/metrics")
             }
-        }
-        .events { events ->
-            events.serverStopped {
+
+            config.events.serverStopped {
                 shutdownLatch.countDown()
             }
-        }
-        .get("/query/{queryName}") { ctx ->
-            NaiveRateLimit.requestPerTimeUnit(ctx, configuration.rateLimit.requests, configuration.rateLimit.unit)
 
-            val queryName = ctx.pathParamAsClass<String>("queryName").get()
+            config.registerPlugin(RateLimitPlugin())
 
-            val queryConfiguration = configuration.queries[queryName]
+            config.routes.get("/query/{queryName}") { ctx ->
+                ctx.with(RateLimitPlugin::class)
+                    .requestPerTimeUnit(configuration.rateLimit.requests, configuration.rateLimit.unit)
 
-            if (queryConfiguration != null) {
-                val parameters = queryConfiguration.parameters.entries
-                    .associate { (k, v) -> k to ctx.queryParamAsClass(k, v.dataType.typeClass.java).get() }
+                val queryName = ctx.pathParamAsClass<String>("queryName").required().get()
 
-                val settings = QuerySettings()
-                settings.format = queryConfiguration.outputFormat.format
-                settings.serverSetting("readonly", "1")
-                settings.httpHeader(X_FORWARDED_FOR, ctx.header(X_FORWARDED_FOR)?.split(",")?.get(0) ?: ctx.ip())
-                queryConfiguration.clientSettings.forEach {
-                    settings.setOption(it.key, it.value)
-                }
-                queryConfiguration.serverSettings.forEach {
-                    settings.serverSetting(it.key, it.value)
-                }
+                val queryConfiguration = configuration.queries[queryName]
 
-                ctx.future {
-                    client.query(
-                        queryConfiguration.queryText,
-                        parameters,
-                        QuerySettings.merge(settings, queryConfiguration.outputFormat.settings)
-                    )
-                        .thenAccept { result ->
-                            ctx
-                                .contentType(queryConfiguration.outputFormat.contentType)
-                                .result(result.inputStream)
+                if (queryConfiguration != null) {
+                    val parameters = queryConfiguration.parameters.entries
+                        .associate { (k, v) ->
+                            k to ctx.queryParamAsClass(k, v.dataType.typeClass.java).required().get()
                         }
-                        .exceptionally { throwable ->
-                            log.error(throwable) { "ClickHouse query failed" }
-                            throw BadGatewayResponse()
-                        }
+
+                    val settings = QuerySettings()
+                    settings.format = queryConfiguration.outputFormat.format
+                    settings.serverSetting("readonly", "1")
+                    settings.httpHeader(X_FORWARDED_FOR, ctx.header(X_FORWARDED_FOR)?.split(",")?.get(0) ?: ctx.ip())
+                    queryConfiguration.clientSettings.forEach {
+                        settings.setOption(it.key, it.value)
+                    }
+                    queryConfiguration.serverSettings.forEach {
+                        settings.serverSetting(it.key, it.value)
+                    }
+
+                    ctx.future {
+                        client.query(
+                            queryConfiguration.queryText,
+                            parameters,
+                            QuerySettings.merge(settings, queryConfiguration.outputFormat.settings)
+                        )
+                            .thenAccept { result ->
+                                ctx
+                                    .contentType(queryConfiguration.outputFormat.contentType)
+                                    .result(result.inputStream)
+                            }
+                            .exceptionally { throwable ->
+                                log.error(throwable) { "ClickHouse query failed" }
+                                throw BadGatewayResponse()
+                            }
+                    }
+                } else {
+                    throw NotFoundResponse("Query not found")
                 }
-            } else {
-                throw NotFoundResponse("Query not found")
             }
         }
 

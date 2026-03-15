@@ -38,7 +38,6 @@
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
         <jaxb-tools.version>4.0.12</jaxb-tools.version>
-        <javalin.version>6.7.0</javalin.version>
     </properties>
 
     <build>
@@ -399,6 +398,20 @@
                 <type>pom</type>
             </dependency>
             <dependency>
+                <groupId>io.javalin</groupId>
+                <artifactId>javalin-bom</artifactId>
+                <version>7.1.0</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm-bom</artifactId>
+                <version>9.9.1</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
                 <version>6.0.3</version>
@@ -616,24 +629,6 @@
                 <version>0.9.7</version>
             </dependency>
 
-            <!--<dependency>
-                <groupId>org.apache.httpcomponents.client5</groupId>
-                <artifactId>httpclient5</artifactId>
-                <version>5.5.1</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.httpcomponents.core5</groupId>
-                <artifactId>httpcore5-h2</artifactId>
-                <version>5.3.6</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.httpcomponents.core5</groupId>
-                <artifactId>httpcore5</artifactId>
-                <version>5.3.6</version>
-            </dependency>-->
-
             <dependency>
                 <groupId>org.jetbrains</groupId>
                 <artifactId>annotations</artifactId>
@@ -647,17 +642,6 @@
                 <version>1.5.7-7</version>
             </dependency>
 
-            <!-- javalin -->
-            <dependency>
-                <groupId>io.javalin</groupId>
-                <artifactId>javalin</artifactId>
-                <version>${javalin.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.javalin</groupId>
-                <artifactId>javalin-micrometer</artifactId>
-                <version>${javalin.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.aayushatharva.brotli4j</groupId>
                 <artifactId>brotli4j</artifactId>

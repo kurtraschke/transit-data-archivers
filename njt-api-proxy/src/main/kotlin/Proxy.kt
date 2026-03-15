@@ -10,6 +10,10 @@ import dagger.BindsInstance
 import dagger.Component
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.Javalin
+import io.javalin.compression.Brotli
+import io.javalin.compression.CompressionStrategy
+import io.javalin.compression.Gzip
+import io.javalin.compression.Zstd
 import io.javalin.http.BadGatewayResponse
 import io.javalin.http.ContentType
 import io.javalin.http.Header.CONTENT_DISPOSITION
@@ -24,7 +28,7 @@ import io.prometheus.metrics.exporter.servlet.jakarta.PrometheusMetricsServlet
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
-import org.eclipse.jetty.servlet.ServletHolder
+import org.eclipse.jetty.ee10.servlet.ServletHolder
 import retrofit2.HttpException
 import systems.choochoo.transit_data_archivers.common.configuration.ApplicationVersion
 import systems.choochoo.transit_data_archivers.common.modules.ApplicationVersionModule
@@ -100,7 +104,7 @@ internal class Proxy @Inject constructor(
     val app: Javalin = Javalin
         .create { config ->
             config.http.generateEtags = true
-            config.http.brotliAndGzipCompression()
+            config.http.compressionStrategy = CompressionStrategy(Brotli(), Gzip(), Zstd())
 
             config.validation.register(Environment::class.java) { Environment.valueOf(it.uppercase()) }
             config.validation.register(Mode::class.java) { Mode.valueOf(it.uppercase()) }
@@ -119,79 +123,80 @@ internal class Proxy @Inject constructor(
 
                 handler.addServlet(prometheusMetricsServlet, "/metrics")
             }
-        }
-        .events { events ->
-            events.serverStopped {
+
+            config.events.serverStopped {
                 shutdownLatch.countDown()
             }
-        }
-        .get("/{environment}/{mode}/token") { ctx ->
-            val environment = ctx.pathParamAsClass<Environment>("environment").get()
-            val mode = ctx.pathParamAsClass<Mode>("mode").get()
 
-            val token = ptc.get(TokenKey(environment, mode))
+            config.routes.get("/{environment}/{mode}/token") { ctx ->
+                val environment = ctx.pathParamAsClass<Environment>("environment").required().get()
+                val mode = ctx.pathParamAsClass<Mode>("mode").required().get()
 
-            ctx.contentType(ContentType.TEXT_PLAIN)
-            ctx.header(LAST_MODIFIED, token.whenObtained.toHttpDateString())
-            ctx.header(EXPIRES, (token.whenObtained + TOKEN_LIFETIME).toHttpDateString())
-            ctx.result(token.token)
-        }
-        .get("/{environment}/{mode}/proxy/gtfs") { ctx ->
-            val environment = ctx.pathParamAsClass<Environment>("environment").get()
-            val mode = ctx.pathParamAsClass<Mode>("mode").get()
+                val token = ptc.get(TokenKey(environment, mode))
 
-            val token = ptc.get(TokenKey(environment, mode))
-
-            ctx.future {
-                s.get(environment, mode).getGTFS(token.token)
-                    .thenAccept { response ->
-                        val filename = "${environment}-${mode}-GTFS.zip"
-
-                        ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
-                            .contentType(ContentType.APPLICATION_ZIP)
-                            .result(response.byteStream())
-                    }
-                    .exceptionally { throwable ->
-                        handleException(throwable, environment, mode)
-                    }
+                ctx.contentType(ContentType.TEXT_PLAIN)
+                ctx.header(LAST_MODIFIED, token.whenObtained.toHttpDateString())
+                ctx.header(EXPIRES, (token.whenObtained + TOKEN_LIFETIME).toHttpDateString())
+                ctx.result(token.token)
             }
-        }
-        .get("/{environment}/{mode}/proxy/{feed}") { ctx ->
-            val environment = ctx.pathParamAsClass<Environment>("environment").get()
-            val mode = ctx.pathParamAsClass<Mode>("mode").get()
-            val feed = ctx.pathParamAsClass<Feed>("feed").get()
-            val format = ctx.queryParamAsClass<OutputFormat>("format").getOrDefault(PROTOBUF)
 
-            val token = ptc.get(TokenKey(environment, mode))
+            config.routes.get("/{environment}/{mode}/proxy/gtfs") { ctx ->
+                val environment = ctx.pathParamAsClass<Environment>("environment").required().get()
+                val mode = ctx.pathParamAsClass<Mode>("mode").required().get()
 
-            ctx.future {
-                feed.requestFunction(s.get(environment, mode), token.token)
-                    .thenAccept { response ->
-                        val filename = "${environment}-${mode}-${feed}.${format.extension}"
+                val token = ptc.get(TokenKey(environment, mode))
 
-                        ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
+                ctx.future {
+                    s.get(environment, mode).getGTFS(token.token)
+                        .thenAccept { response ->
+                            val filename = "${environment}-${mode}-GTFS.zip"
 
-                        when (format) {
-                            PROTOBUF -> {
-                                ctx.contentType(MediaType.PROTOBUF)
-                                    .result(response.byteStream())
-                            }
+                            ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
+                                .contentType(ContentType.APPLICATION_ZIP)
+                                .result(response.byteStream())
+                        }
+                        .exceptionally { throwable ->
+                            handleException(throwable, environment, mode)
+                        }
+                }
+            }
 
-                            PBTEXT -> {
-                                ctx.contentType(ContentType.TEXT_PLAIN)
-                                    .result(FeedMessage.parser().parsePartialFrom(response.byteStream()).toString())
-                            }
+            config.routes.get("/{environment}/{mode}/proxy/{feed}") { ctx ->
+                val environment = ctx.pathParamAsClass<Environment>("environment").required().get()
+                val mode = ctx.pathParamAsClass<Mode>("mode").required().get()
+                val feed = ctx.pathParamAsClass<Feed>("feed").required().get()
+                val format = ctx.queryParamAsClass<OutputFormat>("format").getOrDefault(PROTOBUF)
 
-                            JSON -> {
-                                ctx.jsonStream(FeedMessage.parser().parsePartialFrom(response.byteStream()))
+                val token = ptc.get(TokenKey(environment, mode))
+
+                ctx.future {
+                    feed.requestFunction(s.get(environment, mode), token.token)
+                        .thenAccept { response ->
+                            val filename = "${environment}-${mode}-${feed}.${format.extension}"
+
+                            ctx.header(CONTENT_DISPOSITION, """attachment; filename="$filename"""")
+
+                            when (format) {
+                                PROTOBUF -> {
+                                    ctx.contentType(MediaType.PROTOBUF)
+                                        .result(response.byteStream())
+                                }
+
+                                PBTEXT -> {
+                                    ctx.contentType(ContentType.TEXT_PLAIN)
+                                        .result(FeedMessage.parser().parsePartialFrom(response.byteStream()).toString())
+                                }
+
+                                JSON -> {
+                                    ctx.jsonStream(FeedMessage.parser().parsePartialFrom(response.byteStream()))
+                                }
                             }
                         }
-                    }
-                    .exceptionally { throwable ->
-                        handleException(throwable, environment, mode)
-                    }
+                        .exceptionally { throwable ->
+                            handleException(throwable, environment, mode)
+                        }
+                }
             }
-
         }
 
     private fun handleException(throwable: Throwable, environment: Environment, mode: Mode): Nothing {
