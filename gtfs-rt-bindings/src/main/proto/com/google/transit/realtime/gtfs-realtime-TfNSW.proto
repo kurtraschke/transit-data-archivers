@@ -1,0 +1,81 @@
+syntax = "proto2";
+
+import "com/google/transit/realtime/gtfs-realtime.proto";
+
+option java_package = "com.google.transit.realtime";
+
+package transit_realtime;
+
+//Adapted/extracted from TfNSW file at https://opendata.transport.nsw.gov.au/data/dataset/public-transport-realtime-trip-update-v2/resource/9d9b1e2d-598a-49b7-9920-d629dc968b72
+
+// NEW
+// An addition to the GTFS static bundle
+message UpdateBundle {
+  // the name of the bundle to be updated. This is to allow consumers to update the correct bundle
+  required string GTFSStaticBundle = 1;
+  // This field is the update sequence ID. It should commence at 1 for the first update to a static bundle and increment by 1 for each successive update
+  // The intent of this field is to allow the consumer to identify updates they may already have processed.
+  required int32 update_sequence = 2;
+  // repeated field to cancel scheduled trips in the bundle. This is the trip_id to cancel.
+  repeated string cancelled_trip = 4;
+}
+
+// NEW
+message CarriageDescriptor {
+  optional string name = 1;
+  required int32 position_in_consist = 2;
+  enum OccupancyStatus {
+    EMPTY = 0;
+    MANY_SEATS_AVAILABLE = 1;
+    FEW_SEATS_AVAILABLE = 2;
+    STANDING_ROOM_ONLY = 3;
+    CRUSHED_STANDING_ROOM_ONLY = 4;
+    FULL = 5;
+  }
+  optional OccupancyStatus occupancy_status = 3;
+  optional bool quiet_carriage = 4 [default = false];
+  enum ToiletStatus {
+    NONE = 0;
+    NORMAL = 1;
+    ACCESSIBLE = 2;
+  }
+  optional ToiletStatus toilet = 5;
+  optional bool luggage_rack = 6 [default = false];
+  optional OccupancyStatus departure_occupancy_status = 7; //08/6/22 - Changed to Departure Occupancy Status to ensure its in line with GTFS-R Specifications(https://github.com/google/transit/blob/master/gtfs-realtime/spec/en/reference.md#message-stoptimeevent)
+
+  extensions 1000 to 1999;
+}
+
+// NEW
+message TfnswVehicleDescriptor {
+  optional bool air_conditioned = 1 [default = false];
+  optional int32 wheelchair_accessible = 2 [default = 0];
+  optional string vehicle_model = 3;
+  optional bool performing_prior_trip = 4 [default = false];
+  optional int32 special_vehicle_attributes = 5 [default = 0];
+}
+
+enum TrackDirection {
+  UP = 0;
+  DOWN = 1;
+}
+
+extend transit_realtime.FeedEntity {
+  optional UpdateBundle update = 1007; // NEW
+}
+
+extend transit_realtime.VehiclePosition {
+  repeated CarriageDescriptor consist = 1007;
+}
+
+extend transit_realtime.Position {
+  optional TrackDirection track_direction = 1007; // NEW
+}
+
+extend transit_realtime.VehicleDescriptor {
+  optional TfnswVehicleDescriptor tfnsw_vehicle_descriptor = 1007; // NEW
+}
+
+extend transit_realtime.TripUpdate.StopTimeUpdate {
+  repeated CarriageDescriptor carriage_seq_predictive_occupancy = 1007; // NEW - 22/2/22 - Predictive Real Time Occupancy added to TripUpdate->Stop Time Update
+}

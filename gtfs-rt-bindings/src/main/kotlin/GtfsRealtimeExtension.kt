@@ -38,6 +38,11 @@ enum class GtfsRealtimeExtension {
         override fun registerExtension(registry: ExtensionRegistry) {
             GtfsRealtimeCrowding.registerAllExtensions(registry)
         }
+    },
+    TFNSW {
+        override fun registerExtension(registry: ExtensionRegistry) {
+            GtfsRealtimeTfNSW.registerAllExtensions(registry)
+        }
     };
 
     abstract fun registerExtension(registry: ExtensionRegistry)
