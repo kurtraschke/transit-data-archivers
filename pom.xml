@@ -30,7 +30,7 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
         <shade.skip>false</shade.skip>
-        <kotlin.version>2.3.10</kotlin.version>
+        <kotlin.version>2.3.20</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.17</slf4j.version>
         <protobuf.version>4.34.0</protobuf.version>
@@ -571,7 +571,7 @@
             <dependency>
                 <groupId>io.arrow-kt</groupId>
                 <artifactId>arrow-core-jvm</artifactId>
-                <version>2.2.2</version>
+                <version>2.2.2.1</version>
             </dependency>
 
             <!-- dagger -->
