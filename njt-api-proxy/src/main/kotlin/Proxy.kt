@@ -206,11 +206,7 @@ internal class Proxy @Inject constructor(
             ptc.invalidate(TokenKey(environment, mode))
         }
 
-        if (errorMessage != null) {
-            throw BadGatewayResponse(errorMessage)
-        } else {
-            throw BadGatewayResponse(throwable.stackTraceToString())
-        }
+        throw BadGatewayResponse(errorMessage ?: throwable.stackTraceToString())
     }
 
     private fun extractErrorBody(throwable: Throwable): ByteArray? {
