@@ -21,9 +21,7 @@ interface FallbackWriter {
 
 @Suppress("unused")
 enum class CompressionMode(val filenameExtension: String = "") {
-    NONE {
-        override fun compress(input: ByteArray): ByteArray = input
-    },
+    NONE,
     ZSTANDARD(".zst") {
         override fun compress(input: ByteArray): ByteArray = Zstd.compress(input)
 
@@ -36,7 +34,7 @@ enum class CompressionMode(val filenameExtension: String = "") {
             }
     };
 
-    abstract fun compress(input: ByteArray): ByteArray
+    open fun compress(input: ByteArray): ByteArray = input
 
     open fun isAvailable(): Boolean = true
 }
