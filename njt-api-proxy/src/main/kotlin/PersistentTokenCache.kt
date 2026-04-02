@@ -11,17 +11,15 @@ import io.javalin.http.BadGatewayResponse
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import jakarta.inject.Singleton
+import systems.choochoo.transit_data_archivers.njt.model.Environment
+import systems.choochoo.transit_data_archivers.njt.model.Mode
 import systems.choochoo.transit_data_archivers.njt.model.Token
 import systems.choochoo.transit_data_archivers.njt.model.TokenKey
 import systems.choochoo.transit_data_archivers.njt.services.MetaRealtimeService
-import systems.choochoo.transit_data_archivers.njt.utils.TOKEN_LIFETIME
 import systems.choochoo.transit_data_archivers.njt.utils.parseErrorMessage
 import java.io.IOException
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.locks.Lock
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isDirectory
 import kotlin.io.path.isReadable
@@ -39,68 +37,62 @@ internal class PersistentTokenCache @Inject constructor(
     private val ts: TokenStore,
     private val om: ObjectMapper,
 ) {
-    private val locks = ConcurrentHashMap<TokenKey, Lock>()
-
-    private fun lock(k: TokenKey): Lock {
-        return locks.computeIfAbsent(k) { _ -> ReentrantLock() }
-    }
+    private val tokens = ConcurrentHashMap<TokenKey, Token>(Environment.entries.size * Mode.entries.size)
 
     fun get(k: TokenKey): Token {
-        val l = lock(k)
-
-        return l.withLock {
-            if (!existsAndIsValid(k)) {
-                ts.put(k, getUncached(k))
-            }
-
-            ts.get(k)!!
-        }
-    }
-
-    private fun getUncached(k: TokenKey): Token {
-        val rs = s.get(k.environment, k.mode)
-
-        val call = rs.authenticateUser(username, password)
-        val response = call.execute()
-
-        if (response.isSuccessful && response.body()?.authenticated == true && response.body()?.token != null) {
-            val t = Token(
-                response.body()?.token!!,
-                response.headers().getDate(HttpHeaders.DATE)?.toInstant()?.toKotlinInstant() ?: Clock.System.now()
-            )
-
-            return t
-        } else {
-            val errorMessage = response.body()?.errorMessage ?: parseErrorMessage(om, response.errorBody()?.bytes())
-
-            log.error { "Token request for ${k.environment} ${k.mode} failed: $errorMessage" }
-
-            if (errorMessage != null) {
-                throw BadGatewayResponse(errorMessage)
+        tokens.computeIfPresent(k) { k, t ->
+            if (t.isValid) {
+                t
             } else {
-                throw BadGatewayResponse("Unable to obtain token.")
+                log.debug { "Purging expired token for ${k.environment} ${k.mode}" }
+                ts.delete(k)
+                null
             }
         }
-    }
 
-    fun existsAndIsValid(k: TokenKey): Boolean {
-        return lock(k).withLock {
-            val t = ts.get(k)
+        return tokens.computeIfAbsent(k) { k ->
+            val storedToken = ts.get(k)
 
-            if (t == null) {
-                false
+            val storedTokenValid = storedToken?.isValid ?: false
+
+            if (storedTokenValid) {
+                log.debug { "Returning valid cached token for ${k.environment} ${k.mode}" }
+                storedToken
             } else {
-                (t.whenObtained + TOKEN_LIFETIME) >= Clock.System.now()
+                log.debug { "No valid cached token for ${k.environment} ${k.mode}; requesting new token" }
+                val rs = s.get(k.environment, k.mode)
+
+                val call = rs.authenticateUser(username, password)
+                val response = call.execute()
+
+                if (response.isSuccessful && response.body()?.authenticated == true && response.body()?.token != null) {
+                    log.debug { "New token obtained for ${k.environment} ${k.mode}" }
+                    val t = Token(
+                        response.body()?.token!!,
+                        response.headers().getDate(HttpHeaders.DATE)?.toInstant()?.toKotlinInstant()
+                            ?: Clock.System.now()
+                    )
+
+                    ts.put(k, t)
+
+                    t
+                } else {
+                    val errorMessage =
+                        response.body()?.errorMessage ?: parseErrorMessage(om, response.errorBody()?.bytes())
+
+                    log.error { "Token request for ${k.environment} ${k.mode} failed: $errorMessage" }
+
+                    throw BadGatewayResponse(errorMessage ?: "Unable to obtain token.")
+                }
             }
+
         }
     }
 
     fun invalidate(k: TokenKey) {
-        lock(k).withLock {
-            ts.delete(k)
-        }
+        ts.delete(k)
+        tokens.remove(k)
     }
-
 }
 
 @Singleton
@@ -112,7 +104,7 @@ internal class TokenStore @Inject constructor(
         require(baseDir.isDirectory() && baseDir.isReadable() && baseDir.isWritable()) { "$baseDir must be a directory that is readable and writable" }
     }
 
-    private fun tokenPath(key: TokenKey) = baseDir.resolve(key.filenameForToken())
+    private fun tokenPath(key: TokenKey) = baseDir.resolve(key.filename)
 
     fun get(key: TokenKey): Token? {
         return try {
@@ -130,12 +122,9 @@ internal class TokenStore @Inject constructor(
 
     fun put(key: TokenKey, value: Token) {
         om.writeValue(tokenPath(key).toFile(), value)
-
     }
 
     fun delete(key: TokenKey) {
         tokenPath(key).deleteIfExists()
     }
 }
-
-private fun TokenKey.filenameForToken() = "$environment-$mode.json"

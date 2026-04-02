@@ -3,6 +3,8 @@ package systems.choochoo.transit_data_archivers.njt.model
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
 import com.fasterxml.jackson.databind.annotation.JsonSerialize
 import systems.choochoo.transit_data_archivers.common.utils.EpochSecondInstant
+import systems.choochoo.transit_data_archivers.njt.utils.TOKEN_LIFETIME
+import kotlin.time.Clock
 import kotlin.time.Instant
 
 internal data class Token(
@@ -10,4 +12,10 @@ internal data class Token(
     @param:JsonSerialize(using = EpochSecondInstant.Serializer::class)
     @param:JsonDeserialize(using = EpochSecondInstant.Deserializer::class)
     val whenObtained: Instant,
-)
+) {
+    val presumedExpiration: Instant
+        get() = whenObtained + TOKEN_LIFETIME
+
+    val isValid: Boolean
+        get() = presumedExpiration >= Clock.System.now()
+}

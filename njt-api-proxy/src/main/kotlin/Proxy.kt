@@ -133,7 +133,7 @@ internal class Proxy @Inject constructor(
 
                 ctx.contentType(ContentType.TEXT_PLAIN)
                 ctx.header(LAST_MODIFIED, token.whenObtained.toHttpDateString())
-                ctx.header(EXPIRES, (token.whenObtained + TOKEN_LIFETIME).toHttpDateString())
+                ctx.header(EXPIRES, token.presumedExpiration.toHttpDateString())
                 ctx.result(token.token)
             }
 
