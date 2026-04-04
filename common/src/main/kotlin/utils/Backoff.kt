@@ -15,40 +15,44 @@ class Backoff(
     private val jitterFactor: Double,
     private val quantum: Duration
 ) {
-    private val failureTimes: MutableSet<Instant> = mutableSetOf()
+    private val pauseTimes = mutableSetOf<Instant>()
+    private var consecutiveFailures = 0
 
     /**
      * Observe an execution event and return a backoff duration when warranted.
      *
      * The general logic is as follows:
      *
-     * 1. The first `n` failures are "free", in the sense that they do not provoke a pause.
-     * 2. Subsequent failures provoke a pause defined by an exponential escalation, up to a maximum duration.
+     * 1. The first `n` consecutive failures are "free", in the sense that they do not provoke a pause.
+     * 2. Subsequent failures within a defined period provoke a pause defined by an exponential escalation, up to a maximum duration.
      * 3. To avoid thundering herds, we perturb the pause period by randomly adding or removing a given jitter factor.
      *
      */
     fun observeExecution(executionTime: Instant, isError: Boolean): Duration? {
-        if (isError) {
-            failureTimes.add(executionTime)
-        }
-
-        failureTimes.removeIf {
+        pauseTimes.removeIf {
             executionTime - it > pauseResetPeriod
         }
 
-        val chargedFailures = failureTimes.size - maxConsecutiveFailures
-
-        return if (isError && chargedFailures > 0) {
-            quantizeDuration(
-                jitter(
-                    (pausePeriod * pauseEscalation.pow(chargedFailures)),
-                    jitterFactor
-                ),
-                quantum
-            )
-                .coerceAtMost(maxPauseDuration)
-        } else {
+        return if (!isError) {
+            consecutiveFailures = 0
             null
+        } else {
+            consecutiveFailures += 1
+
+            if (consecutiveFailures > maxConsecutiveFailures) {
+                pauseTimes.add(executionTime)
+
+                quantizeDuration(
+                    jitter(
+                        (pausePeriod * pauseEscalation.pow(pauseTimes.size)),
+                        jitterFactor
+                    ),
+                    quantum
+                )
+                    .coerceAtMost(maxPauseDuration)
+            } else {
+                null
+            }
         }
     }
 
