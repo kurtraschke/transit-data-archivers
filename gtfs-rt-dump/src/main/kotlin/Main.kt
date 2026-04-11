@@ -13,6 +13,7 @@ import kotlinx.datetime.toLocalDateTime
 import picocli.CommandLine
 import picocli.CommandLine.*
 import systems.choochoo.transit_data_archivers.common.utils.VersionProvider
+import systems.choochoo.transit_data_archivers.gtfsrt.dump.OutputFormat.JSON
 import systems.choochoo.transit_data_archivers.gtfsrt.dump.OutputFormat.PBTEXT
 import systems.choochoo.transit_data_archivers.gtfsrt.extensions.GtfsRealtimeExtension
 import java.net.URL
@@ -82,7 +83,7 @@ internal fun dump(
     val fm = parseFunction(parser, input, registry)
 
     val out = when (outputFormat) {
-        OutputFormat.JSON -> {
+        JSON -> {
             jsonMapper {
                 addModules(
                     kotlinModule(),
