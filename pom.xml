@@ -33,7 +33,7 @@
         <kotlin.version>2.3.21</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
         <slf4j.version>2.0.18</slf4j.version>
-        <protobuf.version>4.34.1</protobuf.version>
+        <protobuf.version>4.35.0</protobuf.version>
         <dagger.version>2.59.2</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
@@ -153,12 +153,12 @@
 
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>3.5.5</version>
+                    <version>3.5.6</version>
                 </plugin>
 
                 <plugin>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.5.5</version>
+                    <version>3.5.6</version>
                     <executions>
                         <execution>
                             <goals>
@@ -336,7 +336,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <version>3.6.2</version>
+                <version>3.6.3</version>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>
@@ -407,14 +407,14 @@
             <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-bom</artifactId>
-                <version>9.10</version>
+                <version>9.10.1</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>6.0.3</version>
+                <version>6.1.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -528,7 +528,7 @@
             <dependency>
                 <groupId>io.github.oshai</groupId>
                 <artifactId>kotlin-logging-jvm</artifactId>
-                <version>8.0.01</version>
+                <version>8.0.4</version>
             </dependency>
 
             <!-- picocli -->
@@ -639,7 +639,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-8</version>
+                <version>1.5.7-9</version>
             </dependency>
 
             <dependency>
