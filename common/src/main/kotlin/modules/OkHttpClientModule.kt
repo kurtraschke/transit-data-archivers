@@ -54,7 +54,7 @@ abstract class OkHttpClientModule {
                     if (meterRegistry.isPresent) {
                         eventListener(
                             OkHttpMetricsEventListener.builder(meterRegistry.get(), "okhttp.requests")
-                                .uriMapper { req -> req?.url?.redact() ?: "unknown" }
+                                .uriMapper { req -> req.url.redact() }
                                 .build()
                         )
                     }
