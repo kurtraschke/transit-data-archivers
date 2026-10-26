@@ -30,10 +30,10 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>25</kotlin.compiler.jvmTarget>
         <shade.skip>false</shade.skip>
-        <kotlin.version>2.4.10</kotlin.version>
+        <kotlin.version>2.4.21</kotlin.version>
         <picocli.version>4.7.7</picocli.version>
-        <slf4j.version>2.0.19</slf4j.version>
-        <protobuf.version>4.36.1</protobuf.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <protobuf.version>4.36.2</protobuf.version>
         <dagger.version>2.60.1</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
         <hoplite.version>2.9.0</hoplite.version>
@@ -256,7 +256,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.6.3</version>
+                    <version>3.6.4</version>
                 </plugin>
 
                 <plugin>
@@ -299,7 +299,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>2.22.0</version>
                     <configuration>
                         <ruleSet>
                             <ignoreVersions>
@@ -372,7 +372,7 @@
             <dependency>
                 <groupId>io.prometheus</groupId>
                 <artifactId>prometheus-metrics-bom</artifactId>
-                <version>1.8.0</version>
+                <version>1.9.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -393,7 +393,7 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.22.2</version>
+                <version>2.22.3</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -407,7 +407,7 @@
             <dependency>
                 <groupId>org.ow2.asm</groupId>
                 <artifactId>asm-bom</artifactId>
-                <version>9.10.1</version>
+                <version>9.11</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -510,7 +510,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>33.7.1-jre</version>
+                <version>33.7.2-jre</version>
             </dependency>
 
             <!-- slf4j -->
@@ -626,7 +626,7 @@
             <dependency>
                 <groupId>com.clickhouse</groupId>
                 <artifactId>client-v2</artifactId>
-                <version>0.10.0</version>
+                <version>0.11.0</version>
             </dependency>
 
             <dependency>
@@ -639,7 +639,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-16</version>
+                <version>1.5.7-23</version>
             </dependency>
 
             <dependency>
