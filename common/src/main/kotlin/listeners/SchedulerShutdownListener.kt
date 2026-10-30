@@ -10,10 +10,10 @@ import java.util.concurrent.CountDownLatch
 class SchedulerShutdownListener @Inject constructor() : SchedulerListenerSupport() {
     val schedulerShutdownLatch = CountDownLatch(1)
 
-    private val log = super.log.toKLogger()
-
     @Volatile
     var schedulerStarted = false
+
+    private val log = super.log.toKLogger()
 
     override fun schedulerStarted() {
         schedulerStarted = true

@@ -12,6 +12,7 @@ import kotlin.concurrent.thread
 @Singleton
 class SchedulerErrorListener @Inject constructor(private val lazyScheduler: Lazy<Scheduler>) :
     SchedulerListenerSupport() {
+
     @Volatile
     var schedulerTerminatedWithError = false
 
