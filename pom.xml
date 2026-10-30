@@ -571,7 +571,7 @@
             <dependency>
                 <groupId>io.arrow-kt</groupId>
                 <artifactId>arrow-core-jvm</artifactId>
-                <version>2.3.0</version>
+                <version>2.3.0.1</version>
             </dependency>
 
             <!-- dagger -->
@@ -639,7 +639,7 @@
             <dependency>
                 <groupId>com.github.luben</groupId>
                 <artifactId>zstd-jni</artifactId>
-                <version>1.5.7-24</version>
+                <version>1.5.7-25</version>
             </dependency>
 
             <dependency>
