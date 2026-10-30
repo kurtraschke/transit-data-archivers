@@ -36,7 +36,7 @@
         <protobuf.version>4.36.2</protobuf.version>
         <dagger.version>2.60.1</dagger.version>
         <retrofit.version>3.0.0</retrofit.version>
-        <hoplite.version>2.9.0</hoplite.version>
+        <hoplite.version>3.0.5</hoplite.version>
         <jaxb-tools.version>4.0.16</jaxb-tools.version>
     </properties>
 

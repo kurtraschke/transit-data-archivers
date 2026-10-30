@@ -36,8 +36,8 @@ class ArchiverFallbackIT {
 
         val clickhouseUrl = "http://clickhouse.invalid:8123/"
 
-        variables.set("config.override.database.url", clickhouseUrl)
-        variables.set("config.override.fallback.basePath", fallbackPath.toAbsolutePath().toString())
+        variables.set("GTFS_RT_ARCHIVER_DATABASE_URL", clickhouseUrl)
+        variables.set("GTFS_RT_ARCHIVER_FALLBACK_BASEPATH", fallbackPath.toAbsolutePath().toString())
 
         val cmd = CommandLine(::runArchiver.javaMethod)
 

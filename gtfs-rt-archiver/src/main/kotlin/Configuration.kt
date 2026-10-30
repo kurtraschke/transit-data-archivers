@@ -25,7 +25,7 @@ internal data class Configuration(
     val storeResponseBodyOnError: Boolean = true,
     override val operatorContact: String?,
     val failureResponse: FailureResponse = FailureResponse(),
-    val feeds: List<Feed>
+    val feeds: List<Feed> = emptyList()
 ) : HasDatabaseConfiguration, HasFallbackConfiguration, HasOperatorContact, HasCallTimeout
 
 internal data class MetricsConfiguration(
@@ -42,7 +42,7 @@ internal data class Feed(
     val storeResponseBody: Boolean?,
     val storeResponseBodyOnError: Boolean?,
     val headers: Map<String, String> = emptyMap(),
-    val basicAuthCredentials: BasicAuthCredential?,
+    val basicAuthCredentials: BasicAuthCredential? = null,
     val ignoreTLSErrors: Boolean = false,
     val queryParameters: Map<String, String> = emptyMap(),
     val extensions: Set<GtfsRealtimeExtension> = emptySet(),

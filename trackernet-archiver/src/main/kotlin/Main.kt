@@ -6,6 +6,7 @@ import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.ExperimentalHoplite
 import com.sksamuel.hoplite.addFileSource
+import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import picocli.CommandLine
 import picocli.CommandLine.*
@@ -13,6 +14,8 @@ import systems.choochoo.transit_data_archivers.common.utils.VersionProvider
 import java.nio.file.Path
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
+
+private const val ENV_PREFIX = "TRACKERNET_ARCHIVER_"
 
 private val log = KotlinLogging.logger {}
 
@@ -31,7 +34,8 @@ internal fun runArchiver(
     configurationFile: Path
 ): Int {
     val configuration = try {
-        ConfigLoaderBuilder.default()
+        ConfigLoaderBuilder.defaultWithoutPropertySources()
+            .addPropertySource(EnvironmentVariablesPropertySource(prefix = ENV_PREFIX))
             .addFileSource(configurationFile.toFile())
             .withExplicitSealedTypes()
             .strict()

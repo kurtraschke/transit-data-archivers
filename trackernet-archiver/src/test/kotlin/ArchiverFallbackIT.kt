@@ -73,9 +73,9 @@ class ArchiverFallbackIT {
 
         val clickhouseUrl = "http://clickhouse.invalid:8123/"
 
-        variables.set("config.override.appKey", TEST_API_KEY)
-        variables.set("config.override.database.url", clickhouseUrl)
-        variables.set("config.override.fallback.basePath", fallbackPath.toAbsolutePath().toString())
+        variables.set("TRACKERNET_ARCHIVER_APPKEY", TEST_API_KEY)
+        variables.set("TRACKERNET_ARCHIVER_DATABASE_URL", clickhouseUrl)
+        variables.set("TRACKERNET_ARCHIVER_FALLBACK_BASEPATH", fallbackPath.toAbsolutePath().toString())
 
         val cmd = CommandLine(::runArchiver.javaMethod)
 

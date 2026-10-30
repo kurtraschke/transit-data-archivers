@@ -6,6 +6,7 @@ import com.sksamuel.hoplite.ConfigException
 import com.sksamuel.hoplite.ConfigLoaderBuilder
 import com.sksamuel.hoplite.ExperimentalHoplite
 import com.sksamuel.hoplite.addFileSource
+import com.sksamuel.hoplite.sources.EnvironmentVariablesPropertySource
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
@@ -24,6 +25,8 @@ import java.util.concurrent.CountDownLatch
 import kotlin.reflect.jvm.javaMethod
 import kotlin.system.exitProcess
 import kotlin.time.toKotlinInstant
+
+private const val ENV_PREFIX = "QUERY_PROXY_"
 
 private val log = KotlinLogging.logger {}
 
@@ -57,7 +60,8 @@ internal fun runProxy(
     configurationFile: Path
 ): Int {
     val configuration = try {
-        ConfigLoaderBuilder.default()
+        ConfigLoaderBuilder.defaultWithoutPropertySources()
+            .addPropertySource(EnvironmentVariablesPropertySource(prefix = ENV_PREFIX))
             .addFileSource(configurationFile.toFile())
             .withExplicitSealedTypes()
             .strict()
